@@ -1,0 +1,24 @@
+# dsh-ds-stack-preset: the DeepSeek Stack (ds-stack) agent preset as an
+# installable bundle patch. Inserts one `@deepseek-ai/dsh-agent-preset`
+# declaration row; every preset-internal row lives in ./ds-stack/ beside this
+# file.
+#
+# Rows inserted by a bundle patch compose into the profile's ROOT Include tree,
+# whose baseUrl is the PROFILE directory — so the include path below is written
+# relative to the profile root, stepping through node_modules to the installed
+# bundle. `./ds-stack/agent.cordis.yml` then sets its own baseUrl to its own
+# directory, which is what keeps its `./ds-loop.mjs` row and its `./skills`
+# lookup resolving beside the file instead of beside the profile.
+- insert:
+    - id: preset-ds-stack
+      name: "@deepseek-ai/dsh-agent-preset"
+      config:
+        id: ds-stack
+        name: DeepSeek Stack 模式
+        description: 把 aicodeking/deepseek-stack 的 ds-* 技能包搬进 DSH：常驻 ds-mode 人格，29 个循环技能随包分发，并在轮次收尾时把「改完没验证」和「同一修法连错两次」打回继续。
+        order: 6
+        plugins:
+          - id: ds-stack-composition
+            name: "cordis:include"
+            config:
+              path: "./node_modules/dsh-ds-stack-preset/ds-stack/agent.cordis.yml"

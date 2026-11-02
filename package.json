@@ -1,0 +1,38 @@
+{
+  "name": "dsh-ds-stack-preset",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "DeepSeek Stack agent preset: the ds-* loop skills from aicodeking/deepseek-stack, an always-on ds-mode persona, and a turn-boundary guard that sends the agent back to verify (or to stop repeating a failed idea).",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "agent-preset",
+    "deepseek-stack",
+    "skills"
+  ],
+  "files": [
+    "cordis.patch.yml",
+    "ds-stack",
+    "test",
+    "README.md",
+    "NOTICE.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TonyZiYuan/dsh-ds-stack-preset.git"
+  },
+  "homepage": "https://github.com/TonyZiYuan/dsh-ds-stack-preset#readme",
+  "bugs": {
+    "url": "https://github.com/TonyZiYuan/dsh-ds-stack-preset/issues"
+  },
+  "author": "TonyZiYuan",
+  "license": "MIT"
+}

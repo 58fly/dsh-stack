@@ -1,0 +1,5 @@
+# The bundle ships files whose bytes matter: `ds-stack/skills/**` is a verbatim
+# copy of upstream aicodeking/deepseek-stack, and the preset claims byte-identical
+# skills. `-text` disables every EOL conversion so a clone on Windows (where
+# core.autocrlf=true is common) has exactly the committed bytes.
+* -text
