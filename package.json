@@ -1,9 +1,44 @@
 {
-  "name": "dsh-ds-stack-preset",
-  "version": "1.0.0",
-  "private": true,
+  "name": "dsh-stack",
+  "version": "0.1.0",
+  "description": "DeepSeek Stack 模式 agent 预设：aicodeking/deepseek-stack 的 29 个 ds-* 循环技能、常驻 ds-mode 人格，以及轮次收尾时把「改完没验证」「同一修法连错两次」打回继续的守卫。",
   "type": "module",
-  "description": "DeepSeek Stack agent preset: the ds-* loop skills from aicodeking/deepseek-stack, an always-on ds-mode persona, and a turn-boundary guard that sends the agent back to verify (or to stop repeating a failed idea).",
+  "files": [
+    "cordis.patch.yml",
+    "preset",
+    "test",
+    "README.md",
+    "README.en.md",
+    "CHANGELOG.md",
+    "NOTICE.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.1-rc.5"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.5"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "node test/ds-loop.test.mjs && node test/preset.test.mjs && node scripts/verify-preset.mjs && node scripts/verify-skills.mjs && node scripts/verify-manifest.mjs && node scripts/verify-host-api.mjs",
+    "prepublishOnly": "node scripts/verify-release.mjs",
+    "verify:release": "node scripts/verify-release.mjs --verify"
+  },
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -12,27 +47,18 @@
     "deepseek-stack",
     "skills"
   ],
-  "files": [
-    "cordis.patch.yml",
-    "ds-stack",
-    "test",
-    "README.md",
-    "NOTICE.md",
-    "LICENSE"
-  ],
-  "dsh": {
-    "bundle": {
-      "patch": "./cordis.patch.yml"
-    }
+  "author": {
+    "name": "sunjingzhi",
+    "email": "dlyh@vip.qq.com",
+    "url": "https://github.com/58fly"
   },
+  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TonyZiYuan/dsh-ds-stack-preset.git"
+    "url": "git+https://github.com/58fly/dsh-stack.git"
   },
-  "homepage": "https://github.com/TonyZiYuan/dsh-ds-stack-preset#readme",
+  "homepage": "https://github.com/58fly/dsh-stack#readme",
   "bugs": {
-    "url": "https://github.com/TonyZiYuan/dsh-ds-stack-preset/issues"
-  },
-  "author": "TonyZiYuan",
-  "license": "MIT"
+    "url": "https://github.com/58fly/dsh-stack/issues"
+  }
 }

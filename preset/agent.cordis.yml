@@ -74,10 +74,16 @@
     evidence: true
     unstick: true
     failStreak: 2
-    maxSteersPerTurn: 1
+    # Two nudges, not one: a model that ignores the first polite ask and closes
+    # anyway would otherwise be left alone. The second is worded harder and the
+    # budget still caps the turn, so this cannot become a loop.
+    maxSteersPerTurn: 2
     includeSubagents: true
-    mutationTools: [write, edit, str_replace_editor, apply_patch, multiedit, notebook_edit]
-    checkTools: [bash, pwsh, sh, shell]
+    # Only tools the host actually registers: dsh-tool-fs exposes read/write/edit
+    # and the shell row exposes bash (or pwsh on Windows). Listing editors this
+    # host does not ship would make the guard look broader than it is.
+    mutationTools: [write, edit]
+    checkTools: [bash, pwsh]
     documentationSuffixes: ['.md', '.mdx', '.txt', '.rst', '.adoc']
 
 # ── shell ───────────────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 /**
- * Unit checks for ../ds-stack/ds-loop.mjs — run with any Node >= 22:
+ * Unit checks for ../preset/ds-loop.mjs — run with any Node >= 22:
  *   node test/ds-loop.test.mjs
  *
  * They drive the plugin through the real hook contract (a fake `ctx.on`
@@ -7,7 +7,7 @@
  */
 import assert from 'node:assert/strict'
 
-const mod = await import(new URL("../ds-stack/ds-loop.mjs", import.meta.url).href)
+const mod = await import(new URL("../preset/ds-loop.mjs", import.meta.url).href)
 
 let seq = 0
 const call = (turn, callId, name, args = {}) => ({
@@ -180,6 +180,50 @@ check('README + source edit -> evidence steer', () => {
   ], 1)
   assert.equal(run.steers.length, 1)
   assert.match(text(run.steers[0]), /core\.ts/)
+})
+
+// 14 — the nudge names only the edits still unproven: a file edited before the
+// last successful check is already proven, so it must not be listed.
+check('nudge lists only edits after the last check', () => {
+  const run = makeRun()
+  run.stop([
+    call(1, 'a', 'write', { file_path: 'already-proven.ts' }), result(1, 'a'),
+    call(1, 'b', 'pwsh', { command: 'npm test' }), result(1, 'b'),
+    call(1, 'c', 'edit', { file_path: 'still-unproven.ts' }), result(1, 'c'),
+  ], 1)
+  assert.equal(run.steers.length, 1)
+  assert.match(text(run.steers[0]), /still-unproven\.ts/)
+  assert.doesNotMatch(text(run.steers[0]), /already-proven/)
+})
+
+// 15 — the default budget is 2, and the second nudge is worded harder than the
+// first so a model that ignored the polite one gets told it already ignored it.
+check('default budget 2 -> second nudge reworded', () => {
+  const run = makeRun()
+  const events = [call(1, 'a', 'write', { file_path: 'q1' }), result(1, 'a')]
+  const agent = { session: { id: 'reword', header: {}, snapshotEvents: () => events.slice() }, steer: (m) => run.steers.push(m) }
+  run.handlers.get('agent/turn-stopping')({ agent, turn: 1 })
+  assert.equal(run.steers.length, 1)
+  assert.doesNotMatch(text(run.steers[0]), /a second time/)
+  events.push(call(1, 'b', 'write', { file_path: 'q2' }), result(1, 'b'))
+  run.handlers.get('agent/turn-stopping')({ agent, turn: 1 })
+  assert.equal(run.steers.length, 2)
+  assert.match(text(run.steers[1]), /a second time/)
+})
+
+// 16 — an unstick nudge is never reworded by the evidence wording: the same
+// repeated-failure state must not be spent on a second, differently worded try.
+check('unstick nudge does not gain evidence wording on retry', () => {
+  const run = makeRun()
+  const events = [
+    call(1, 'a', 'pwsh', { command: 'x' }), result(1, 'a', true),
+    call(1, 'b', 'pwsh', { command: 'x' }), result(1, 'b', true),
+  ]
+  const agent = { session: { id: 'unstick2', header: {}, snapshotEvents: () => events.slice() }, steer: (m) => run.steers.push(m) }
+  run.handlers.get('agent/turn-stopping')({ agent, turn: 1 })
+  events.push(call(1, 'c', 'pwsh', { command: 'x' }), result(1, 'c', true))
+  run.handlers.get('agent/turn-stopping')({ agent, turn: 1 })
+  for (const steer of run.steers) assert.doesNotMatch(text(steer), /a second time/)
 })
 
 console.log(`\n${passed} checks passed`)

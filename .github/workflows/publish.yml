@@ -1,0 +1,41 @@
+name: publish
+
+# 打 tag（v*）时发布到 npm。
+#
+# 与 AGENTS.md 的铁律顺序一致：commit → tag → push → publish。
+# tag 推到 GitHub 的那一刻说明 Git 侧已就位，这时才允许发布——顺序由事件本身保证。
+#
+# 发布门禁由 `prepublishOnly` → `scripts/verify-release.mjs` 把守：
+# 工作区干净、HEAD 有 tag、tag 之后进包内容未变。这里先跑完整测试，不过就不发布。
+#
+# 需要仓库 secret `NPM_TOKEN`（npm 的 Automation token，账号 58fly）。
+
+on:
+  push:
+    tags: ['v*']
+  # 手动触发：发布失败后重跑，或在不打新 tag 的前提下验证这条流水线本身。
+  # 它执行的是真实 `npm publish`；当前版本已发布时会以 E403 失败，属预期。
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # prepublishOnly 要比较 tag..HEAD 的进包差异，必须拿到完整历史与 tag。
+          # 默认 fetch-depth: 1 只拉单个 commit，tag 不可解析，检查会直接失败。
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: 全部断言与校验
+        run: npm test
+
+      - name: 发布到 npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish

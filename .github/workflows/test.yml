@@ -1,21 +1,68 @@
 name: test
 
+# 本包零运行时依赖、零 devDependencies：`npm test` 直接跑 node，不需要 install。
+# 因此这里没有 `npm ci`，也不缓存依赖——加了只会多一步可能失败的地方。
+#
+# 覆盖两件事：
+#   1. node 22 / 24 两个 LTS 上跑全部断言（engines 声明就是这两个线）。
+#   2. 在**真实 npm 打包产物**上跑一次，确认 files 白名单没漏东西。
+#      verify-manifest.mjs 已经在本地跑过 `npm pack --dry-run`，这里再对真实
+#      tarball 解包校验，是因为白名单的失效方式往往只在真实打包时暴露
+#      （例如目录被 .npmignore 之外的规则排除）。
+#
+# verify-host-api.mjs 在 CI 上必然 SKIP：它读的是本机 DSH 安装目录。
+# 那条判据只能在装了 DSH 的机器上有意义，SKIP 不是失败。
+
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
-  guard:
-    name: ds-loop guard checks
+  test:
+    name: node ${{ matrix.node }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         node: [22, 24]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
-      - name: Run the dependency-free unit checks
-        run: node test/ds-loop.test.mjs
+
+      - name: 全部断言与校验
+        run: npm test
+
+  package:
+    name: 真实打包产物
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: 打 tarball
+        # --ignore-scripts：跳过 prepublishOnly。它要求本地存在 v<version> tag，
+        # 而 checkout 默认不拉 tag、PR 上更是必然没有；发布门禁由 publish.yml 守。
+        run: npm pack --ignore-scripts
+
+      - name: 解包并核对关键文件
+        run: |
+          set -euo pipefail
+          tar -xzf dsh-stack-*.tgz
+          test -f package/cordis.patch.yml
+          test -f package/preset/agent.cordis.yml
+          test -f package/preset/ds-loop.mjs
+          test -f package/README.md
+          test -f package/LICENSE
+          n=$(find package/preset/skills -maxdepth 1 -mindepth 1 -type d | wc -l | tr -d ' ')
+          echo "技能目录：$n"
+          test "$n" = "29"
+          # include 路径必须与包名一致，否则装完预设不出现。
+          grep -q './node_modules/dsh-stack/preset/agent.cordis.yml' package/cordis.patch.yml

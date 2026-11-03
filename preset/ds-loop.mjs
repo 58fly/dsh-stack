@@ -40,10 +40,10 @@ const DEFAULTS = {
   evidence: true,
   unstick: true,
   failStreak: 2,
-  maxSteersPerTurn: 1,
+  maxSteersPerTurn: 2,
   includeSubagents: true,
-  mutationTools: ['write', 'edit', 'str_replace_editor', 'apply_patch', 'multiedit', 'notebook_edit'],
-  checkTools: ['bash', 'pwsh', 'sh', 'shell'],
+  mutationTools: ['write', 'edit'],
+  checkTools: ['bash', 'pwsh'],
   documentationSuffixes: ['.md', '.mdx', '.txt', '.rst', '.adoc'],
 }
 
@@ -156,8 +156,11 @@ function analyzeTurn(events, turn, mutationTools, checkTools) {
     failStreak += 1
   }
 
+  // Only the edits made AFTER the last successful check are unproven. Edits
+  // already covered by an earlier check are proven, so naming them in the nudge
+  // would point the model at files that need nothing.
   const mutatedFiles = []
-  for (let index = 0; index <= lastMutation; index += 1) {
+  for (let index = lastCheck + 1; index <= lastMutation; index += 1) {
     const outcome = outcomes[index]
     if (!outcome.isError && mutations.has(outcome.name)) mutatedFiles.push(...outcome.targets)
   }
@@ -173,10 +176,17 @@ function analyzeTurn(events, turn, mutationTools, checkTools) {
 }
 
 /** The nudge for a turn that edited files and then tried to close. */
-function evidenceText(mutatedFiles) {
+function evidenceText(mutatedFiles, attempt = 1) {
   const where = mutatedFiles.length === 0
     ? 'this turn edited files'
     : `this turn edited ${mutatedFiles.map(file => `\`${file}\``).join(', ')}`
+  if (attempt > 1) {
+    return [
+      `ds-stack checkpoint — still no successful check after ${where}.`,
+      'You are closing the turn without evidence a second time. Run one command now, even a trivial one that reads the file back or executes the program.',
+      'If the command genuinely cannot run here, reply with one line naming what blocked it and what you could not verify. Then stop.',
+    ].join(' ')
+  }
   return [
     `ds-stack checkpoint — ${where} but ran no successful check afterwards.`,
     'Run the smallest command that proves the change (the test, the build, or the program itself), then report its result in the same message as the claim.',
@@ -207,20 +217,22 @@ export function apply(ctx, config) {
   /**
    * Per `sessionId:turn` nudge budget. `seen` is how much of the turn had
    * happened at the last nudge, so a re-entered hook with no new activity
-   * cannot nudge again for the same state.
+   * cannot nudge again for the same state. Returns the 1-based nudge number
+   * this call spends, or 0 when the budget is gone.
    */
   const claimed = new Map()
   const CLAIM_LIMIT = 200
 
   const claim = (key, seen) => {
     const entry = claimed.get(key)
-    if (entry !== undefined && (entry.count >= maxSteersPerTurn || seen <= entry.seen)) return false
-    claimed.set(key, { count: (entry?.count ?? 0) + 1, seen })
+    if (entry !== undefined && (entry.count >= maxSteersPerTurn || seen <= entry.seen)) return 0
+    const count = (entry?.count ?? 0) + 1
+    claimed.set(key, { count, seen })
     if (claimed.size > CLAIM_LIMIT) {
       const oldest = claimed.keys().next().value
       claimed.delete(oldest)
     }
-    return true
+    return count
   }
 
   let warned = false
@@ -258,7 +270,14 @@ export function apply(ctx, config) {
       // Claim only after the decision: a turn that violates nothing keeps its
       // whole budget, and a repeated hook call with no new turn activity is a
       // no-op instead of a second nudge for the same state.
-      if (!claim(key, turnEvents.length)) return
+      const attempt = claim(key, turnEvents.length)
+      if (attempt === 0) return
+
+      // The second nudge for the same rule is phrased harder: the first one
+      // already asked politely and the model closed anyway.
+      if (attempt > 1 && evidence && evidenceMissing) {
+        text = evidenceText(mutatedFiles.slice(0, 3), attempt)
+      }
 
       agent.steer({
         id: `${SOURCE_KIND}-${session.id}-${turn}`,
