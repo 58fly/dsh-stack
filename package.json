@@ -1,6 +1,6 @@
 {
   "name": "dsh-stack",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "DeepSeek Stack 模式 agent 预设：aicodeking/deepseek-stack 的 29 个 ds-* 循环技能、常驻 ds-mode 人格，以及轮次收尾时把「改完没验证」「同一修法连错两次」打回继续的守卫。",
   "type": "module",
   "files": [
