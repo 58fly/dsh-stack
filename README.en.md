@@ -2,13 +2,13 @@
 
 The DeepSeek Stack mode (`ds-stack`) agent preset for DSH, shipped as an installable bundle.
 
-Repository: [58fly/dsh-stack](https://github.com/58fly/dsh-stack) · Skills from [aicodeking/deepseek-stack](https://github.com/aicodeking/deepseek-stack) (MIT, see [NOTICE.md](NOTICE.md)) · Upstream preset: [TonyZiYuan/dsh-ds-stack-preset](https://github.com/TonyZiYuan/dsh-ds-stack-preset)
+Repository: [58fly/dsh-stack](https://github.com/58fly/dsh-stack) · Skills from [aicodeking/deepseek-stack](https://github.com/aicodeking/deepseek-stack) (MIT, see [NOTICE.md](NOTICE.md))
 
 [aicodeking/deepseek-stack](https://github.com/aicodeking/deepseek-stack) is a pack of `SKILL.md` files that patches four gaps common to cheap models: no plan first, claiming a fix without running anything, retrying the same failing idea, and drifting on long tasks. Two things are missing when you drop that pack into DSH: **persistence** (a skill only applies after the `skill` tool loads it, yet `ds-mode` calls itself always-on) and a **hard boundary** (prose rules drift in a long session). This preset supplies those two and copies the rest verbatim.
 
-## Upstream → this preset
+## Skill pack → this preset
 
-| Upstream | Becomes | Where |
+| Skill pack | Becomes | Where |
 |---|---|---|
 | `ds-mode` (an "always-on" working style) | Always-on persona `persona.prefix` (rules condensed, not the full text) | `preset/agent.cordis.yml` |
 | 29 `ds-*` skills | Skill directory shipped as-is | `preset/skills/` |
@@ -23,7 +23,7 @@ Apart from those three points the tool catalog, sandbox, approvals, compaction a
 - `cordis.patch.yml` — the bundle patch: inserts one `@deepseek-ai/dsh-agent-preset` declaration (`preset-ds-stack`, display name 「DeepSeek Stack 模式」, order 6).
 - `preset/agent.cordis.yml` — the composition itself: persona, skill root, loop guard, shell/file/task/goal/plan/compaction/delegation rows.
 - `preset/ds-loop.mjs` — the two turn-boundary guards (below).
-- `preset/skills/` — the 29 upstream skills, byte-for-byte.
+- `preset/skills/` — the 29 skills from the pack, byte-for-byte.
 
 ## Install
 
@@ -200,7 +200,7 @@ Then pick `/ds-ready` (make it mergeable, a human merges) or `/ds-ship` (it merg
 2. **The persona is resident, skills are loaded.** Apart from `ds-mode` (already internalised in the persona), the other 28 need to be invoked. "Installed but I feel nothing" almost always means the task did not match — describe it concretely.
 3. **Give the acceptance criterion up front, save a whole round.** "run `npm test`, all green" beats "tell me when done" by one round trip.
 4. **Do not hand it three goals at once.** The persona says one change at a time; three threads make it re-weigh in the middle.
-5. **If the catalog feels expensive, delete directories.** 29 summaries cost ~1.7k tokens, resent every turn; delete the skills you never use and they leave the catalog. Do not shrink `catalogDescriptionMaxLength` — upstream puts "Use when …" at the end of each description, so truncation drops the trigger first.
+5. **If the catalog feels expensive, delete directories.** 29 summaries cost ~1.7k tokens, resent every turn; delete the skills you never use and they leave the catalog. Do not shrink `catalogDescriptionMaxLength` — the pack puts "Use when …" at the end of each description, so truncation drops the trigger first.
 6. **Subagents are guarded too** (`includeSubagents: true`). Delegated work is held to the same evidence rule.
 7. **On Windows the check tool is `pwsh`**, already the default; change the executor and you must change `checkTools`, or the guard goes silent.
 
@@ -245,8 +245,8 @@ Tunable fields (the `ds-loop` row in `preset/agent.cordis.yml`):
 ## Boundaries
 
 - **The skill root uses `customSkillDirs` (rank 300), not `bundledSkillDir`**: the former is additive — project roots (100/200) still win, the user's own roots (400/500) still load, and the deployment's bundled root is untouched; the latter would replace the deployment default outright. The cost: a same-named `ds-*` skill in `~/.dsh/skills` loses to this package (identical content, usually imperceptible).
-- **Upstream is not followed automatically**: to upgrade, re-mirror upstream `skills/` over `preset/skills/`. This package never rewrites skill content, so there is nothing to merge.
-- **The skill catalog costs a fixed prefix every turn**: 29 summaries, 6830 chars (≈1708 tokens), resent as durable prefix. To spend less, **delete the skill directories you do not use** (the directory is the only source of truth); do not lower `catalogDescriptionMaxLength` — upstream puts the "Use when …" clause at the end of each description, so truncation drops the routing signal first, and that signal is exactly what the token buys.
+- **Skill content is never rewritten**: to upgrade, re-mirror the pack `skills/` over `preset/skills/`. This package does not touch skill bodies, so there is nothing to merge.
+- **The skill catalog costs a fixed prefix every turn**: 29 summaries, 6830 chars (≈1708 tokens), resent as durable prefix. To spend less, **delete the skill directories you do not use** (the directory is the only source of truth); do not lower `catalogDescriptionMaxLength` — the pack puts the "Use when …" clause at the end of each description, so truncation drops the routing signal first, and that signal is exactly what the token buys.
 - **The guard has no platform branch**: on Windows the shell tool is `pwsh`, already in the `checkTools` default. If you disable `tool-pwsh` for a different executor, update that list or the guard silently stops matching.
 - **`bash` can bypass the first rule**: one `bash` call that writes files and runs a command counts as verification only. That is a deliberate trade (otherwise `sed -i && npm test` would be a false positive); the cost is that an all-bash editing style is unconstrained.
 
@@ -275,4 +275,4 @@ If the profile installs this bundle via `link:` (junction / symlink), then **edi
 
 ## Maintenance
 
-This repo is maintained in-house and does not auto-follow upstream. Release process and directory conventions live in [AGENTS.md](AGENTS.md); version history in [CHANGELOG.md](CHANGELOG.md).
+This repo is maintained in-house. Release process and directory conventions live in [AGENTS.md](AGENTS.md); version history in [CHANGELOG.md](CHANGELOG.md).

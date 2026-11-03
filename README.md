@@ -2,13 +2,13 @@
 
 DeepSeek Stack 模式（`ds-stack`）agent 预设，以可装卸 bundle 的形式分发。
 
-仓库：[58fly/dsh-stack](https://github.com/58fly/dsh-stack) · 技能来源：[aicodeking/deepseek-stack](https://github.com/aicodeking/deepseek-stack)（MIT，见 [NOTICE.md](NOTICE.md)）· 上游预设：[TonyZiYuan/dsh-ds-stack-preset](https://github.com/TonyZiYuan/dsh-ds-stack-preset)
+仓库：[58fly/dsh-stack](https://github.com/58fly/dsh-stack) · 技能来源：[aicodeking/deepseek-stack](https://github.com/aicodeking/deepseek-stack)（MIT，见 [NOTICE.md](NOTICE.md)）
 
 [aicodeking/deepseek-stack](https://github.com/aicodeking/deepseek-stack) 是一套 `SKILL.md` 技能包：它不开新框架，只给廉价模型补上四个常见缺口——不先计划、没跑就说修好了、同一思路反复重试、长任务跑偏。这套东西在 DSH 里只缺两样：一个是**常驻**（技能只有被 `skill` 工具加载后才生效，而 ds-mode 自称 always-on），一个是**硬边界**（散文规则在长会话里会漂移）。本预设补的就是这两样，其余原样搬过来。
 
-## 上游 → 本预设
+## 技能包 → 本预设
 
-| 上游提供 | 本预设里变成 | 位于 |
+| 技能包提供 | 本预设里变成 | 位于 |
 |---|---|---|
 | `ds-mode`（「始终生效」的工作风格） | 常驻人格 `persona.prefix`（规则压缩，非全文） | `preset/agent.cordis.yml` |
 | 29 个 `ds-*` 技能 | 原样随包分发的技能目录 | `preset/skills/` |
@@ -23,7 +23,7 @@ DeepSeek Stack 模式（`ds-stack`）agent 预设，以可装卸 bundle 的形�
 - `cordis.patch.yml` — bundle 补丁：插入一条 `@deepseek-ai/dsh-agent-preset` 声明（`preset-ds-stack`，显示名「DeepSeek Stack 模式」，order 6）。
 - `preset/agent.cordis.yml` — 预设组合本体：人格、技能根、循环守卫、shell/文件/任务/目标/计划/压缩/委派等行。
 - `preset/ds-loop.mjs` — 两个轮次收尾守卫（见下）。
-- `preset/skills/` — 上游 29 个技能，逐字节保留。
+- `preset/skills/` — 技能来源的 29 个技能，逐字节保留。
 
 ## 安装
 
@@ -199,7 +199,7 @@ exactly what you could not verify.
 2. **人格是常驻的，技能是加载的**。上面 29 条里除了 `ds-mode`（人格已内化），其余都要被调用才生效。所以「装好了但没感觉」通常是没触发任务——把任务说具体就会触发。
 3. **先给验收标准，能省一整轮**。「做完跑 `npm test` 全绿」比「做完告诉我」少一次来回。
 4. **不要一次给三个目标**。人格里写着「一次一个改动」，同时推进三件事会让它自己在中间反复权衡。
-5. **觉得技能目录太贵就删目录**。29 条摘要约 1.7k token，每轮重发；删掉不用的技能目录，它就不会出现在目录里。别去调小 `catalogDescriptionMaxLength`——上游把「Use when …」放在描述末尾，截断先丢触发条件。
+5. **觉得技能目录太贵就删目录**。29 条摘要约 1.7k token，每轮重发；删掉不用的技能目录，它就不会出现在目录里。别去调小 `catalogDescriptionMaxLength`——技能包原文把「Use when …」放在描述末尾，截断先丢触发条件。
 6. **子代理默认也被守卫管**（`includeSubagents: true`）。分派出去的活儿同样要求「改完有证据」。
 7. **Windows 上检查工具是 `pwsh`**，已在默认值里；换执行器要同步 `checkTools`，否则守卫静默失效。
 
@@ -244,8 +244,8 @@ exactly what you could not verify.
 ## 边界与注意
 
 - **技能根用 `customSkillDirs`（rank 300），不是 `bundledSkillDir`**：前者是追加，项目级（100/200）仍优先、用户自己的技能（400/500）仍加载、部署自带的 bundled 根不被顶掉；后者会整体替换部署默认值。代价是：若你在 `~/.dsh/skills` 里放了同名 `ds-*`，本包的版本会赢（内容相同，通常无感）。
-- **不自动跟随上游更新**：升级技能的办法是重新镜像上游 `skills/` 覆盖 `preset/skills/`，本包不改写技能内容，因此不会有合并冲突。
-- **技能目录会造成每轮固定成本**：摘要计 29 条、合计 6830 字符（≈1708 token），作为持久前缀每轮都会重发。想更省，**删掉不用的技能目录**（目录是唯一事实来源，删了就不会出现在目录里）；不要靠调小 `catalogDescriptionMaxLength`——上游把「Use when …」放在每条描述末尾，截断先丢的正是触发条件，而这笔 token 花的就是触发能力。
+- **技能内容不改写**：升级技能的办法是把技能来源的 `skills/` 重新镜像到 `preset/skills/`，本包不修改技能正文，因此不会有合并冲突。
+- **技能目录会造成每轮固定成本**：摘要计 29 条、合计 6830 字符（≈1708 token），作为持久前缀每轮都会重发。想更省，**删掉不用的技能目录**（目录是唯一事实来源，删了就不会出现在目录里）；不要靠调小 `catalogDescriptionMaxLength`——技能包原文把「Use when …」放在每条描述末尾，截断先丢的正是触发条件，而这笔 token 花的就是触发能力。
 - **守卫没有平台分支**：Windows 上 shell 工具名是 `pwsh`，已在 `checkTools` 默认值里；如果你关掉 `tool-pwsh` 换成别的执行器，记得同步这个列表，否则守卫静默失效。
 - **`bash` 可以绕过第一条守卫**：一条 `bash` 同时写文件并跑命令时，它只被算作「验证」。这是有意的取舍（否则 `sed -i && npm test` 会误报），代价是「全程用 bash 改文件」的工作方式不受约束。
 
@@ -274,4 +274,4 @@ npm test
 
 ## 维护
 
-本仓库自行维护，不跟随上游自动更新。发布流程与目录规范见 [AGENTS.md](AGENTS.md)，版本变化见 [CHANGELOG.md](CHANGELOG.md)。
+本仓库自行维护。发布流程与目录规范见 [AGENTS.md](AGENTS.md)，版本变化见 [CHANGELOG.md](CHANGELOG.md)。
