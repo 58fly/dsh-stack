@@ -24,6 +24,13 @@ const tagName = `v${version}`
  */
 const LEGACY_VERSIONS = new Set()
 
+/**
+ * npm 自己在发布流程里创建的占位版本，不是我们发的东西。
+ * `0.0.0-stage` 是 npm 做 staged publishing 时先占住包名用的，会出现在 versions 里但没有对应 tag，
+ * 也无法补 tag——它根本不对应任何 commit。把它当成真实版本去要求 tag 只会让门禁永远红着。
+ */
+const NPM_INTERNAL_VERSIONS = new Set(['0.0.0-stage'])
+
 const failures = []
 const notes = []
 
@@ -133,6 +140,10 @@ if (process.argv.includes('--verify')) {
       }
 
       for (const v of published) {
+        if (NPM_INTERNAL_VERSIONS.has(v)) {
+          notes.push(`  （npm 内部占位版本，不对应 commit）${v}`)
+          continue
+        }
         const remoteTag = tryGit(['rev-list', '-n', '1', `v${v}`])
         if (remoteTag !== null) continue
         if (LEGACY_VERSIONS.has(v)) {
