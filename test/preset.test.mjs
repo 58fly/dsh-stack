@@ -129,4 +129,27 @@ check('manifest is publishable', () => {
   assert.ok(pkg.files.includes('CHANGELOG.md'))
 })
 
+// 13 — 预设里的每个 {{变量}} 都必须是宿主注册过的。
+//
+// 上游就是死在这里：persona.suffix 写了 `{{cwd}}`，而宿主只注册 provider 与 model
+// （dsh-agent-loop/lib/index.js:1607-1608），渲染 persona-suffix 时抛 UNKNOWN，
+// 会话在模型走第一步之前就结束。这类错误没有降级路径，只能在提交前拦住。
+//
+// 白名单是宿主的私有契约，硬编码在此以便 CI 上也能跑（verify-host-api.mjs 在
+// 没有 DSH 安装时是 SKIP）。宿主新增变量时同步这里，别放宽成「任意变量都行」。
+const HOST_PROMPT_VARIABLES = new Set(['provider', 'model'])
+check('preset only uses host-registered prompt variables', () => {
+  const live = preset
+    .split('\n')
+    .filter((line) => !/^\s*#/.test(line))
+    .join('\n')
+  const used = [...live.matchAll(/\{\{([^}]*)\}\}/g)].map((match) => match[1].trim())
+  const unknown = used.filter((name) => !HOST_PROMPT_VARIABLES.has(name))
+  assert.deepEqual(
+    unknown,
+    [],
+    `预设引用了宿主没注册的变量：${unknown.map((n) => `{{${n}}}`).join(', ')}（宿主只有 ${[...HOST_PROMPT_VARIABLES].join(', ')}）`
+  )
+})
+
 console.log(`\n${passed} checks passed`)

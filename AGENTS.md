@@ -82,7 +82,7 @@ scripts/
   verify-preset.mjs     装配完整性：行存在、include 路径、baseUrl、元数据
   verify-skills.mjs     技能合法性：frontmatter、name↔目录、交叉引用、catalog 字数
   verify-manifest.mjs   manifest：files 白名单、engines、peerDependencies、bundle 声明
-  verify-host-api.mjs   宿主契约：turn-stopping / steer / snapshotEvents 仍存在
+  verify-host-api.mjs   宿主契约：turn-stopping / steer / snapshotEvents / 提示词变量 仍存在
   verify-release.mjs    发布门禁：工作区干净 + tag 对齐 + CHANGELOG 有本节
 docs/
   decisions/            架构决策记录（一篇一个决策，写「为什么不选另一个」）

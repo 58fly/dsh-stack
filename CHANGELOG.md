@@ -4,6 +4,25 @@
 
 分类固定为：**新增 / 修复 / 变更 / 文档 / 移除**。条目写「用户能感知到什么」，内部重构不单独成条。
 
+## [0.1.1] - 2026-11-04
+
+这是一个**必须升级**的版本：0.1.0 会让会话在建起来的第一刻就死掉。
+
+### 修复
+
+- **选择「DeepSeek Stack 模式」后会话无法启动**。0.1.0 从上游原样继承了 `persona.suffix: Your working directory is {{cwd}}.`，而宿主只注册 `provider` 与 `model` 两个提示词变量；渲染 `deployment:persona-suffix` 时抛 `unknown prompt variable "{{cwd}}"`，模型一步都没跑就结束，只能切回 standard。现删掉该 suffix——工作目录本来就已经在运行时上下文块里，这行既多余又致命。
+- **改了 YAML 却不重启不生效**。这个问题不是代码缺陷，但 0.1.0 期间很容易误判成「改了没用」：DSH 主进程在安装 bundle 时就把 include 树读进内存，会话运行期间不重读磁盘上的 `agent.cordis.yml`。升级或手改预设后必须重启 DSH 才会生效。
+
+### 新增
+
+- `verify-host-api` 增加第 6 项检查：预设里出现的每个 `{{变量}}` 都必须是宿主真正注册过的，未注册直接判失败并列出宿主现有的变量名。
+- `test/preset.test.mjs` 增加同一条断言的独立版本（白名单硬编码 `provider`/`model`）。`verify-host-api` 在没装 DSH 的机器上会 SKIP，CI 里等于没有这条检查；现在两侧都拦。
+- 两个检查都用真实故障行验证过会失败：把 `{{cwd}}` 注回去，脚本退出码 1、测试退出码 1；恢复后均为 0。
+
+### 文档
+
+- `preset/agent.cordis.yml` 的 persona 注释块改写：记下为什么**不能**有 suffix、错误文案长什么样、宿主在哪两行注册变量。下次有人想「补一句工作目录说明」时能先看到这段。
+
 ## [0.1.0] - 2026-11-03
 
 本版本是自维护线的起点：从 [TonyZiYuan/dsh-ds-stack-preset](https://github.com/TonyZiYuan/dsh-ds-stack-preset) 接过来，改名、补齐工程规范、加固守卫。

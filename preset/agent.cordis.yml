@@ -21,11 +21,17 @@
 
 # ── identity ────────────────────────────────────────────────────────────────
 
-# `prefix` replaces the deployment persona for agents on this preset only; the
-# suffix keeps the standard working-directory line. `complete` stays false on
-# purpose: the pack is about HOW the agent works, not about shrinking the tool
-# guidance, runtime context, or approval/sandbox notices that keep it safe.
-# `{{model}}` and `{{cwd}}` are prompt variables resolved at render time.
+# `prefix` replaces the deployment persona for agents on this preset only.
+# `complete` stays false on purpose: the pack is about HOW the agent works, not
+# about shrinking the tool guidance, runtime context, or approval/sandbox
+# notices that keep it safe.
+#
+# No `suffix`. Upstream set one to "Your working directory is <cwd>.", but the
+# host registers exactly two prompt variables — `provider` and `model`
+# (dsh-agent-loop/lib/index.js:1607-1608). An unknown `{{…}}` reference does not
+# degrade: `deployment:persona-suffix` throws on every render, so the session
+# dies before the model takes a single step. The working directory is already in
+# the runtime context block, so the suffix was redundant as well as fatal.
 - id: persona
   name: '@deepseek-ai/dsh-persona'
   config:
@@ -51,7 +57,6 @@
       This session ships the ds-* loop skills (ds-plan-loop, ds-verify-loop, ds-review-loop, ds-unstick, ds-tdd, ds-ship, ds-ledger, ds-unslop, ds-principles, and others). When a task clearly matches one, or the user names one, call the `skill` tool with its exact name before acting.
 
       Harness rule: ending a turn right after editing files with no successful check afterwards sends you back to verify. Run the check, or state in one line why it cannot run here.
-    suffix: Your working directory is {{cwd}}.
 
 # Workspace instruction files stay injected: they are the repository's own
 # rules and the pack assumes the agent knows them before it plans.
