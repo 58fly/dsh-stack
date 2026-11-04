@@ -275,4 +275,4 @@ If the profile installs this bundle via `link:` (junction / symlink), then **edi
 
 ## Maintenance
 
-This repo is maintained in-house. Release process and directory conventions live in [AGENTS.md](AGENTS.md); version history in [CHANGELOG.md](CHANGELOG.md).
+This repo is maintained in-house. Version history lives in [CHANGELOG.md](CHANGELOG.md); the release process and directory conventions are maintainer-local and not published with the repo.

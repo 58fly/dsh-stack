@@ -5,7 +5,7 @@
  *   node scripts/verify-release.mjs            # 发布前（prepublishOnly 自动调用）
  *   node scripts/verify-release.mjs --verify   # 发布后自检（npm run verify:release）
  *
- * 铁律见 AGENTS.md：npm 上每个已发布版本，GitHub 必须有对应 commit 与 tag。
+ * 铁律：npm 上每个已发布版本，GitHub 必须有对应 commit 与 tag。
  */
 
 import { execFileSync } from 'node:child_process'
@@ -99,7 +99,7 @@ if (head === null) {
 // ---- 3. CHANGELOG 必须有当前版本的小节 ----
 const changelogPath = join(ROOT, 'CHANGELOG.md')
 if (!existsSync(changelogPath)) {
-  fail('缺少 CHANGELOG.md', 'AGENTS.md 要求每个版本都必须有对应小节')
+  fail('缺少 CHANGELOG.md', '铁律要求每个版本都必须有对应小节')
 } else {
   const changelog = readFileSync(changelogPath, 'utf8')
   if (!new RegExp(`^## \\[${version.replace(/\./g, '\\.')}\\] - \\d{4}-\\d{2}-\\d{2}`, 'm').test(changelog)) {
@@ -177,5 +177,5 @@ if (failures.length === 0) {
 
 console.error(`\n❌ 发布校验失败（${failures.length} 项）\n`)
 for (const message of failures) console.error(`  - ${message}\n`)
-console.error('铁律见 AGENTS.md：Git 先行，npm 后发。\n')
+console.error('铁律：Git 先行，npm 后发。\n')
 process.exit(1)

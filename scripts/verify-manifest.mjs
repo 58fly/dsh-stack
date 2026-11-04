@@ -74,9 +74,28 @@ for (const entry of required) {
 }
 
 // 不该进包的：docs/ 与 issues/ 是维护者资料，scripts/ 是 CI 用的。
+// 也不该入库的：AGENTS.md 是维护者本地开发约定，属于仓库外隐私，不能出现在 files 里。
 for (const entry of ['docs', 'issues', 'scripts', 'AGENTS.md']) {
   if (pkg.files?.includes(entry)) {
     fail(`files 白名单里不该有 ${entry}`, '维护者资料不进包，装了也看不到')
+  }
+}
+
+// AGENTS.md 必须被 gitignore 且不在索引里——它是本地文件，不能随仓库公开。
+{
+  const ignore = readFileSync(join(ROOT, '.gitignore'), 'utf8')
+  if (!/^AGENTS\.md\s*$/m.test(ignore)) {
+    fail('AGENTS.md 没有写进 .gitignore', '本地开发约束不入库，见本地约定')
+  }
+  try {
+    const tracked = execFileSync('git', ['ls-files', '--error-unmatch', 'AGENTS.md'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    })
+    if (tracked.trim()) fail('AGENTS.md 仍在 git 索引里', 'git rm --cached AGENTS.md')
+  } catch {
+    // 未跟踪 = 期望状态
   }
 }
 

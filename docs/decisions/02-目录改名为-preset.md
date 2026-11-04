@@ -28,7 +28,7 @@
 path: "./node_modules/dsh-stack/preset/agent.cordis.yml"
 ```
 
-`scripts/verify-manifest.mjs` 交叉校验「包名 + 目录 + 该行」三者一致，改任何一个不同步就会在 `npm test` 里失败。这条约束写在 AGENTS.md 的「硬耦合」一节。
+`scripts/verify-manifest.mjs` 交叉校验「包名 + 目录 + 该行」三者一致，改任何一个不同步就会在 `npm test` 里失败。这条约束写在维护者本地约定的「硬耦合」一节，并由该脚本自身兜住。
 
 ## 验证
 

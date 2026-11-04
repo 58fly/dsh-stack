@@ -274,4 +274,4 @@ npm test
 
 ## 维护
 
-本仓库自行维护。发布流程与目录规范见 [AGENTS.md](AGENTS.md)，版本变化见 [CHANGELOG.md](CHANGELOG.md)。
+本仓库自行维护。版本变化见 [CHANGELOG.md](CHANGELOG.md)；发布流程与目录规范属于维护者本地约定，不随仓库公开。

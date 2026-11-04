@@ -2,7 +2,7 @@ name: publish
 
 # 打 tag（v*）时发布到 npm。
 #
-# 与 AGENTS.md 的铁律顺序一致：commit → tag → push → publish。
+# 与铁律顺序一致：commit → tag → push → publish。
 # tag 推到 GitHub 的那一刻说明 Git 侧已就位，这时才允许发布——顺序由事件本身保证。
 #
 # 发布门禁由 `prepublishOnly` → `scripts/verify-release.mjs` 把守：
