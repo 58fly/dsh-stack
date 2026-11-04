@@ -1,4 +1,4 @@
-# DeepSeek Stack (ds-stack) — an agent preset that ports
+# DeepSeek Stack — an agent preset that ports
 # https://github.com/aicodeking/deepseek-stack into DSH.
 #
 # The source pack is not a harness: SKILL.md files that make
@@ -7,10 +7,10 @@
 # DSH already renders skills through `dsh-tool-skill` / `dsh-skill-filesystem`,
 # so this composition supplies the two things the pack cannot supply by itself:
 #
-#   1. an always-on identity — `ds-mode` distilled into the persona, because a
+#   1. an always-on identity — `st-mode` distilled into the persona, because a
 #      working style that must be loaded by a tool call on every session is not
 #      "always-on";
-#   2. a harness-level loop guard — `ds-loop.mjs`, which turns the pack's two
+#   2. a harness-level loop guard — `st-loop.mjs`, which turns the pack's two
 #      strongest rules into turn boundaries the model cannot quietly skip
 #      (verify after editing, stop after two consecutive failures).
 #
@@ -36,7 +36,7 @@
   name: '@deepseek-ai/dsh-persona'
   config:
     prefix: |-
-      You are a coding agent powered by the {{model}} model, running the DeepSeek Stack: a tight, evidence-first loop for long autonomous work.
+      You are a coding agent powered by the {{model}} model, running dsh-stack模式 — the DeepSeek Stack: a tight, evidence-first loop for long autonomous work.
 
       Every task follows the same order:
       1. Restate the task in one line and name the smallest change that satisfies it. Start reversible work without asking.
@@ -54,7 +54,7 @@
       - Keep context lean: summarize, trim long output to the lines that matter, send bulk reading and wide searches to subagents, and do not reread a file you just edited.
       - Comments explain why, never what the next line does.
 
-      This session ships the ds-* loop skills (ds-plan-loop, ds-verify-loop, ds-review-loop, ds-unstick, ds-tdd, ds-ship, ds-ledger, ds-unslop, ds-principles, and others). When a task clearly matches one, or the user names one, call the `skill` tool with its exact name before acting.
+      This session ships the st-* loop skills (st-plan-loop, st-verify-loop, st-review-loop, st-unstick, st-tdd, st-ship, st-ledger, st-unslop, st-principles, and others). When a task clearly matches one, or the user names one, call the `skill` tool with its exact name before acting.
 
       Harness rule: ending a turn right after editing files with no successful check afterwards sends you back to verify. Run the check, or state in one line why it cannot run here.
 
@@ -72,9 +72,9 @@
 # `agent/turn-stopping` — the serial hook that fires before an otherwise
 # finished turn closes — and steer one short message back into the session so
 # the turn keeps going. At most one steer per turn, so the guard can never turn
-# into a loop of its own. See ds-loop.mjs for the evidence it reads.
-- id: ds-loop
-  name: ./ds-loop.mjs
+# into a loop of its own. See st-loop.mjs for the evidence it reads.
+- id: st-loop
+  name: ./st-loop.mjs
   config:
     evidence: true
     unstick: true
@@ -138,7 +138,7 @@
         const { fileURLToPath } = process.getBuiltinModule('node:url')
         const fs = process.getBuiltinModule('node:fs')
         const dir = fileURLToPath(new URL('./skills', ctx.baseUrl))
-        if (!fs.existsSync(dir)) throw new Error(`ds-stack: bundled skills directory not found: ${dir}`)
+        if (!fs.existsSync(dir)) throw new Error(`st-stack: bundled skills directory not found: ${dir}`)
         return [dir]
       })()
 

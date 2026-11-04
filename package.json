@@ -1,7 +1,7 @@
 {
   "name": "dsh-stack",
-  "version": "0.1.5",
-  "description": "DeepSeek Stack 模式 agent 预设：aicodeking/deepseek-stack 的 29 个 ds-* 循环技能、常驻 ds-mode 人格，以及轮次收尾时把「改完没验证」「同一修法连错两次」打回继续的守卫。",
+  "version": "0.2.0",
+  "description": "DeepSeek Stack 模式 agent 预设：aicodeking/deepseek-stack 的 29 个 st-* 循环技能、常驻 st-mode 人格，以及轮次收尾时把「改完没验证」「同一修法连错两次」打回继续的守卫。",
   "type": "module",
   "files": [
     "cordis.patch.yml",
@@ -36,7 +36,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "node test/ds-loop.test.mjs && node test/preset.test.mjs && node scripts/verify-preset.mjs && node scripts/verify-skills.mjs && node scripts/verify-manifest.mjs && node scripts/verify-host-api.mjs",
+    "test": "node test/st-loop.test.mjs && node test/preset.test.mjs && node scripts/verify-preset.mjs && node scripts/verify-skills.mjs && node scripts/verify-manifest.mjs && node scripts/verify-host-api.mjs",
     "prepublishOnly": "node scripts/verify-release.mjs",
     "verify:release": "node scripts/verify-release.mjs --verify"
   },

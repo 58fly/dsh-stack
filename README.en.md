@@ -1,28 +1,28 @@
 # dsh-stack
 
-The DeepSeek Stack mode (`ds-stack`) agent preset for DSH, shipped as an installable bundle.
+The `dsh-stack模式` agent preset for DSH (preset id `dsh-stack`), shipped as an installable bundle.
 
 Repository: [58fly/dsh-stack](https://github.com/58fly/dsh-stack) · Skills from [aicodeking/deepseek-stack](https://github.com/aicodeking/deepseek-stack) (MIT, see [NOTICE.md](NOTICE.md))
 
-[aicodeking/deepseek-stack](https://github.com/aicodeking/deepseek-stack) is a pack of `SKILL.md` files that patches four gaps common to cheap models: no plan first, claiming a fix without running anything, retrying the same failing idea, and drifting on long tasks. Two things are missing when you drop that pack into DSH: **persistence** (a skill only applies after the `skill` tool loads it, yet `ds-mode` calls itself always-on) and a **hard boundary** (prose rules drift in a long session). This preset supplies those two and copies the rest verbatim.
+[aicodeking/deepseek-stack](https://github.com/aicodeking/deepseek-stack) is a pack of `SKILL.md` files that patches four gaps common to cheap models: no plan first, claiming a fix without running anything, retrying the same failing idea, and drifting on long tasks. Two things are missing when you drop that pack into DSH: **persistence** (a skill only applies after the `skill` tool loads it, yet `st-mode` calls itself always-on) and a **hard boundary** (prose rules drift in a long session). This preset supplies those two and copies the rest verbatim.
 
 ## Skill pack → this preset
 
 | Skill pack | Becomes | Where |
 |---|---|---|
-| `ds-mode` (an "always-on" working style) | Always-on persona `persona.prefix` (rules condensed, not the full text) | `preset/agent.cordis.yml` |
-| 29 `ds-*` skills | Skill directory shipped as-is | `preset/skills/` |
-| "Verify after every change" | Turn-boundary check: files edited but no successful check afterwards → sent back | `preset/ds-loop.mjs` |
-| "Stop after the same fix fails twice" | Turn-boundary check: 2 consecutive failures → sent back to re-examine the premise | `preset/ds-loop.mjs` |
+| `st-mode` (an "always-on" working style) | Always-on persona `persona.prefix` (rules condensed, not the full text) | `preset/agent.cordis.yml` |
+| 29 `st-*` skills | Skill directory shipped as-is | `preset/skills/` |
+| "Verify after every change" | Turn-boundary check: files edited but no successful check afterwards → sent back | `preset/st-loop.mjs` |
+| "Stop after the same fix fails twice" | Turn-boundary check: 2 consecutive failures → sent back to re-examine the premise | `preset/st-loop.mjs` |
 | `npx skills add` | A DSH bundle (`cordis.patch.yml` + preset declaration) | this repo |
 
 Apart from those three points the tool catalog, sandbox, approvals, compaction and delegation match the built-in `standard` preset row for row — this preset does not change what an agent can do, only how it works.
 
 ## Layout
 
-- `cordis.patch.yml` — the bundle patch: inserts one `@deepseek-ai/dsh-agent-preset` declaration (`preset-ds-stack`, display name 「DeepSeek Stack 模式」, order 6).
+- `cordis.patch.yml` — the bundle patch: inserts one `@deepseek-ai/dsh-agent-preset` declaration (`preset-dsh-stack`, display name `dsh-stack模式`, order 6).
 - `preset/agent.cordis.yml` — the composition itself: persona, skill root, loop guard, shell/file/task/goal/plan/compaction/delegation rows.
-- `preset/ds-loop.mjs` — the two turn-boundary guards (below).
+- `preset/st-loop.mjs` — the two turn-boundary guards (below).
 - `preset/skills/` — the 29 skills from the pack, byte-for-byte.
 
 ## Install
@@ -49,14 +49,14 @@ plugin_manager({ action: "install_bundle", target: "https://github.com/58fly/dsh
 
 Difference: the host checks a Git-sourced install for updates with `git ls-remote -- <repo> HEAD`, so the commit is its version identity and the plugin page shows a commit SHA (e.g. `afaa2ac`) instead of a version number. Use the npm source when you need to know which version is installed.
 
-Installing registers `preset-ds-stack`. A preset is selectable only in a **new** session that is still empty; running sessions keep the composition they started with.
+Installing registers `preset-dsh-stack`. A preset is selectable only in a **new** session that is still empty; running sessions keep the composition they started with.
 
 ## Quick start
 
 ### Three steps
 
-1. Install (see above). This registers `preset-ds-stack`.
-2. Create a **new**, empty session and pick 「DeepSeek Stack 模式」 in the picker. Running sessions are not switched.
+1. Install (see above). This registers `preset-dsh-stack`.
+2. Create a **new**, empty session and pick `dsh-stack模式` in the picker (the display name is Chinese by design). Running sessions are not switched.
 3. Say what you want. **You do not need to name skills** — the persona loads them when the task matches.
 
 The first message buys you the most when it carries three things: **goal, constraints, definition of done**.
@@ -66,13 +66,13 @@ Rewrite lib/parse.mjs to read CSV in chunks; memory must not scale with file siz
 When done, run it on a 500MB sample and report peak RSS.
 ```
 
-Compare that with "help me optimize parsing performance" — the second one ends with the model guessing your intent, and a second round to fix the guess. To save that round, use `/ds-sharpen` or just fill in the three items yourself.
+Compare that with "help me optimize parsing performance" — the second one ends with the model guessing your intent, and a second round to fix the guess. To save that round, use `/st-sharpen` or just fill in the three items yourself.
 
 ### Is it actually working
 
 | What you see | Meaning |
 |---|---|
-| Messages like `ds-stack checkpoint — this turn edited …` | A guard is steering. Normal behaviour, not an error (see next section) |
+| Messages like `st-stack checkpoint — this turn edited …` | A guard is steering. Normal behaviour, not an error (see next section) |
 | The model restates the task, reads files, then runs a command the moment it edits | The persona is active |
 | A skill catalog appears in the first turn | The 29 skill summaries (~1.7k tokens of durable prefix) are injected |
 | You want the preset version | `node -p "require('dsh-stack/package.json').version"` (from the profile directory) |
@@ -87,53 +87,53 @@ A skill only acts once loaded; you will never name most of these 29 — describe
 
 | Your situation | Gesture |
 |---|---|
-| The request is vague and you fear the wrong direction | `/ds-sharpen` |
-| Several files, steps easy to miss | `/ds-plan-loop` |
-| You want types and module shape settled before code | `/ds-blueprint` |
-| Unsure which approach wins, want variants | `/ds-best-of-n` |
+| The request is vague and you fear the wrong direction | `/st-sharpen` |
+| Several files, steps easy to miss | `/st-plan-loop` |
+| You want types and module shape settled before code | `/st-blueprint` |
+| Unsure which approach wins, want variants | `/st-best-of-n` |
 
 ### While writing
 
 | Your situation | Gesture |
 |---|---|
-| Bug fix that needs a test to stop it recurring | `/ds-tdd` |
-| Code is written; you want it driven to green | `/ds-verify-loop` |
-| A risky change — what else does it break | `/ds-blast-radius` |
-| **The same fix failed twice** | `/ds-unstick` |
-| New page/component that must not look AI-generated | `/ds-design` |
-| Existing UI looks rough; fix it on evidence | `/ds-design-audit` |
+| Bug fix that needs a test to stop it recurring | `/st-tdd` |
+| Code is written; you want it driven to green | `/st-verify-loop` |
+| A risky change — what else does it break | `/st-blast-radius` |
+| **The same fix failed twice** | `/st-unstick` |
+| New page/component that must not look AI-generated | `/st-design` |
+| Existing UI looks rough; fix it on evidence | `/st-design-audit` |
 
 ### Delivering
 
 | Your situation | Gesture |
 |---|---|
-| Self-review before you commit | `/ds-review-loop` |
-| Just open a PR | `/ds-pr` |
-| All the way through the merge (it merges) | `/ds-ship` |
-| All the way to mergeable, **a human clicks merge** | `/ds-ready` |
-| It watches CI and review while you do something else | `/ds-watch-pr` |
-| It replies on the PR for you | `/ds-pr-comments` |
+| Self-review before you commit | `/st-review-loop` |
+| Just open a PR | `/st-pr` |
+| All the way through the merge (it merges) | `/st-ship` |
+| All the way to mergeable, **a human clicks merge** | `/st-ready` |
+| It watches CI and review while you do something else | `/st-watch-pr` |
+| It replies on the PR for you | `/st-pr-comments` |
 
 ### Long runs and parallelism
 
 | Your situation | Gesture |
 |---|---|
-| Multi-phase run that could drift | `/ds-ledger` |
-| Context past half, the model starts repeating itself | `/ds-context-reset` |
-| You were away; "where are we" | `/ds-catchup` |
-| Fan out N parallel passes | `/ds-swarm` |
-| Several models review independently, then converge | `/ds-jury` |
+| Multi-phase run that could drift | `/st-ledger` |
+| Context past half, the model starts repeating itself | `/st-context-reset` |
+| You were away; "where are we" | `/st-catchup` |
+| Fan out N parallel passes | `/st-swarm` |
+| Several models review independently, then converge | `/st-jury` |
 
 ### Taking over and looking back
 
 | Your situation | Gesture |
 |---|---|
-| Inheriting someone else's PR / branch / session | `/ds-adopt` |
-| An old PR needs a rebase, or a verdict on whether it still matters | `/ds-revive` |
-| The same class of mistake, third time | `/ds-lessons` |
-| Prose and comments need the AI smell removed | `/ds-unslop` |
-| You want a stretch of code explained | `/ds-explain` |
-| No idea which one | `/ds-help` |
+| Inheriting someone else's PR / branch / session | `/st-adopt` |
+| An old PR needs a rebase, or a verdict on whether it still matters | `/st-revive` |
+| The same class of mistake, third time | `/st-lessons` |
+| Prose and comments need the AI smell removed | `/st-unslop` |
+| You want a stretch of code explained | `/st-explain` |
+| No idea which one | `/st-help` |
 
 ## Four examples
 
@@ -143,7 +143,7 @@ A skill only acts once loaded; you will never name most of these 29 — describe
 You: this module keeps breaking, take a look
 ```
 
-The model should not start editing. A good opening restates and narrows (`/ds-sharpen` is exactly this):
+The model should not start editing. A good opening restates and narrows (`/st-sharpen` is exactly this):
 
 ```
 You: this module keeps breaking, take a look
@@ -156,10 +156,10 @@ You: wrong data, and yes, the retry part
 
 ### 2. Edited without proof, steered back
 
-This is the message you will **actually** see; verbatim from `preset/ds-loop.mjs`:
+This is the message you will **actually** see; verbatim from `preset/st-loop.mjs`:
 
 ```
-ds-stack checkpoint — this turn edited `lib/parse.mjs` but ran no successful
+st-stack checkpoint — this turn edited `lib/parse.mjs` but ran no successful
 check afterwards. Run the smallest command that proves the change (the test,
 the build, or the program itself), then report its result in the same message
 as the claim. If no check is possible here, say so in one line and name
@@ -177,27 +177,27 @@ To **let it through** you do not disable the guard: have the model run one comma
 ### 3. Long task, change the air on purpose
 
 ```
-You: /ds-context-reset
+You: /st-context-reset
 ```
 
 The model writes a `PROGRESS.md` first (goal, done, next, decisions made), then continues in a new session or a subagent reading only that file. Use it when a task spans many steps, the model starts forgetting, or the context is past half.
 
-If you would rather not manage that by hand, use `/ds-ledger`: one line per decision, read back before each step, which keeps long runs on course.
+If you would rather not manage that by hand, use `/st-ledger`: one line per decision, read back before each step, which keeps long runs on course.
 
 ### 4. Before delivering, make it review itself
 
 ```
-You: /ds-review-loop
+You: /st-review-loop
 ```
 
 The author's view and a fresh-context reviewer's view, up to four rounds, until both agree a thing is right. Much cheaper than opening a PR and waiting for someone to poke holes.
 
-Then pick `/ds-ready` (make it mergeable, a human merges) or `/ds-ship` (it merges) as appropriate.
+Then pick `/st-ready` (make it mergeable, a human merges) or `/st-ship` (it merges) as appropriate.
 
 ## Tips
 
-1. **Gestures and plain language are equivalent, gestures are more deterministic.** "check whether this PR can merge" and `/ds-ready` usually take the same path; when stuck, use the gesture so the model cannot pick wrong.
-2. **The persona is resident, skills are loaded.** Apart from `ds-mode` (already internalised in the persona), the other 28 need to be invoked. "Installed but I feel nothing" almost always means the task did not match — describe it concretely.
+1. **Gestures and plain language are equivalent, gestures are more deterministic.** "check whether this PR can merge" and `/st-ready` usually take the same path; when stuck, use the gesture so the model cannot pick wrong.
+2. **The persona is resident, skills are loaded.** Apart from `st-mode` (already internalised in the persona), the other 28 need to be invoked. "Installed but I feel nothing" almost always means the task did not match — describe it concretely.
 3. **Give the acceptance criterion up front, save a whole round.** "run `npm test`, all green" beats "tell me when done" by one round trip.
 4. **Do not hand it three goals at once.** The persona says one change at a time; three threads make it re-weigh in the middle.
 5. **If the catalog feels expensive, delete directories.** 29 summaries cost ~1.7k tokens, resent every turn; delete the skills you never use and they leave the catalog. Do not shrink `catalogDescriptionMaxLength` — the pack puts "Use when …" at the end of each description, so truncation drops the trigger first.
@@ -209,12 +209,12 @@ Then pick `/ds-ready` (make it mergeable, a human merges) or `/ds-ship` (it merg
 | Do not | Why |
 |---|---|
 | One `bash` call that edits files and runs commands | A single `bash` counts as verification, not as a mutation, so the first guard cannot see it (a deliberate trade-off: otherwise `sed -i && npm test` would false-positive) |
-| Expect it to remember last session's conclusions | Nothing crosses sessions; hand off with `PROGRESS.md` (`/ds-context-reset`) or run `/ds-catchup` |
+| Expect it to remember last session's conclusions | Nothing crosses sessions; hand off with `PROGRESS.md` (`/st-context-reset`) or run `/st-catchup` |
 | Edit `preset/agent.cordis.yml` and expect it to apply | Restart DSH |
 | Switch presets inside an existing session | Not supported; only in a blank new session |
 | Paste thousands of log lines and say "look at this" | The persona says read only the range you need; volume dilutes judgement |
 
-## The two guards (ds-loop)
+## The two guards (st-loop)
 
 On `agent/turn-stopping` (the turn is about to close, not yet committed) the guard reads this turn's durable event log and, when a rule is violated, `steer`s one short message so the turn takes one more step:
 
@@ -229,7 +229,7 @@ Deliberate limits:
 - Plain question turns and plan-mode turns mutate nothing, so they never trigger.
 - An exception inside the guard is logged once and never blocks the turn from closing.
 
-Tunable fields (the `ds-loop` row in `preset/agent.cordis.yml`):
+Tunable fields (the `st-loop` row in `preset/agent.cordis.yml`):
 
 | Field | Default | Meaning |
 |---|---|---|
@@ -244,7 +244,7 @@ Tunable fields (the `ds-loop` row in `preset/agent.cordis.yml`):
 
 ## Boundaries
 
-- **The skill root uses `customSkillDirs` (rank 300), not `bundledSkillDir`**: the former is additive — project roots (100/200) still win, the user's own roots (400/500) still load, and the deployment's bundled root is untouched; the latter would replace the deployment default outright. The cost: a same-named `ds-*` skill in `~/.dsh/skills` loses to this package (identical content, usually imperceptible).
+- **The skill root uses `customSkillDirs` (rank 300), not `bundledSkillDir`**: the former is additive — project roots (100/200) still win, the user's own roots (400/500) still load, and the deployment's bundled root is untouched; the latter would replace the deployment default outright. The cost: a same-named `st-*` skill in `~/.dsh/skills` loses to this package (identical content, usually imperceptible).
 - **Skill content is never rewritten**: to upgrade, re-mirror the pack `skills/` over `preset/skills/`. This package does not touch skill bodies, so there is nothing to merge.
 - **The skill catalog costs a fixed prefix every turn**: 29 summaries, 6830 chars (≈1708 tokens), resent as durable prefix. To spend less, **delete the skill directories you do not use** (the directory is the only source of truth); do not lower `catalogDescriptionMaxLength` — the pack puts the "Use when …" clause at the end of each description, so truncation drops the routing signal first, and that signal is exactly what the token buys.
 - **The guard has no platform branch**: on Windows the shell tool is `pwsh`, already in the `checkTools` default. If you disable `tool-pwsh` for a different executor, update that list or the guard silently stops matching.
@@ -260,10 +260,10 @@ npm test
 
 | Command | What it checks |
 |---|---|
-| `node test/ds-loop.test.mjs` | Guard behaviour, 17 assertions |
+| `node test/st-loop.test.mjs` | Guard behaviour, 17 assertions |
 | `node test/preset.test.mjs` | Static assembly assertions, 13 (persona present, guard config matches module defaults, disabled rows untouched, prompt variables all registered by the host) |
 | `node scripts/verify-preset.mjs` | Assembly integrity: include path = package name + directory, skill root derived from baseUrl, cap fits the longest description |
-| `node scripts/verify-skills.mjs` | Skill validity: frontmatter, directory ↔ `name`, description length, no dead `/ds-*` cross-references |
+| `node scripts/verify-skills.mjs` | Skill validity: frontmatter, directory ↔ `name`, description length, no dead `/st-*` cross-references |
 | `node scripts/verify-manifest.mjs` | Manifest and shipped artifact: allowlist, `engines`, actual `npm pack` contents |
 | `node scripts/verify-host-api.mjs` | Host-private contracts: `agent/turn-stopping`, `agent.steer`, `session.snapshotEvents`, tool-name registry (SKIPs without a DSH install) |
 

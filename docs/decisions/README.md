@@ -8,3 +8,4 @@
 | [02](02-目录改名为-preset.md) | 内部目录 `ds-stack/` → `preset/` | 生效 |
 | [03](03-技能根用-customSkillDirs.md) | 技能根用 `customSkillDirs` 追加，不用 `bundledSkillDir` | 生效 |
 | [04](04-守卫默认值收窄.md) | `mutationTools` / `checkTools` 只留宿主真实注册的工具 | 生效 |
+| [05](05-技能前缀改为-st.md) | 技能前缀 `ds-*` → `st-*`，预设 id → `dsh-stack` | 生效 |

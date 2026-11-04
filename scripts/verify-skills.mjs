@@ -6,9 +6,9 @@
  * 只拦「装进 catalog 之后会静默失效」的四类问题：
  *
  *   1. frontmatter 缺 name/description —— 该条不进 catalog，用户看不到。
- *   2. 目录名 ≠ frontmatter name —— `/ds-xxx` 手势点不到它。
+ *   2. 目录名 ≠ frontmatter name —— `/st-xxx` 手势点不到它。
  *   3. 描述超过 catalogDescriptionMaxLength —— 末尾的「Use when …」被截掉。
- *   4. 正文里的 `/ds-*` 指向不存在的技能 —— 模型照着做会扑空。
+ *   4. 正文里的 `/st-*` 指向不存在的技能 —— 模型照着做会扑空。
  *
  *   node scripts/verify-skills.mjs
  */
@@ -75,7 +75,7 @@ for (const dir of dirs) {
   else if (name !== dir) {
     fail(
       `目录名与 frontmatter name 不一致：${dir} ≠ ${name}`,
-      '宿主按 name 建立 /ds-* 手势，目录名只是镜像技能来源时的落点'
+      '宿主按 name 建立 /st-* 手势，目录名只是镜像技能来源时的落点'
     )
   } else {
     if (byName.has(name)) fail(`技能名重复：${name}`)
@@ -97,10 +97,10 @@ for (const dir of dirs) {
   bodies.set(dir, text)
 }
 
-// ---- 交叉引用：正文里提到的 /ds-* 必须都是真实存在的技能 ----
+// ---- 交叉引用：正文里提到的 /st-* 必须都是真实存在的技能 ----
 const referenced = new Set()
 for (const [dir, text] of bodies) {
-  for (const match of text.matchAll(/[`\s(]\/(ds-[a-z0-9][a-z0-9-]*)/g)) {
+  for (const match of text.matchAll(/[`\s(]\/(st-[a-z0-9][a-z0-9-]*)/g)) {
     const target = match[1]
     referenced.add(target)
     if (!byName.has(target)) {
@@ -120,16 +120,16 @@ for (const dir of dirs) {
 }
 
 // ---- 辅助脚本必须是可执行的文件，不能是空壳 ----
-const watchPr = join(SKILLS, 'ds-watch-pr', 'scripts', 'watch_pr.py')
+const watchPr = join(SKILLS, 'st-watch-pr', 'scripts', 'watch_pr.py')
 if (existsSync(watchPr)) {
-  if (statSync(watchPr).size < 200) fail('ds-watch-pr/scripts/watch_pr.py 过小，可能是空壳')
-} else if (byName.has('ds-watch-pr')) {
-  fail('ds-watch-pr 技能缺少 scripts/watch_pr.py', '该技能正文依赖这个脚本，缺了会指向一个不存在的文件')
+  if (statSync(watchPr).size < 200) fail('st-watch-pr/scripts/watch_pr.py 过小，可能是空壳')
+} else if (byName.has('st-watch-pr')) {
+  fail('st-watch-pr 技能缺少 scripts/watch_pr.py', '该技能正文依赖这个脚本，缺了会指向一个不存在的文件')
 }
 
 // ---- 输出 ----
 notes.unshift(`  技能数：${byName.size}，描述合计 ${totalChars} 字符（≈${Math.round(totalChars / 4)} token），最长 ${longest.name} ${longest.length} 字符（上限 ${cap}）`)
-notes.unshift(`  交叉引用：${referenced.size} 个 /ds-* 手势`)
+notes.unshift(`  交叉引用：${referenced.size} 个 /st-* 手势`)
 for (const note of notes) console.log(note)
 
 if (failures.length === 0) {

@@ -11,7 +11,7 @@
 ## 理由
 
 - **读一次就懂**：`preset/` 直接说明里面是预设内容，不依赖读者知道包名缩写。
-- **搜索不歧义**：`grep -r "ds-stack"` 现在只会命中预设 id（`config.id: ds-stack`）和上游链接，不会同时命中目录名。
+- **搜索不歧义**：`grep -r "ds-stack"` 不会再命中目录名。（0.2.0 之前预设 id 是 `ds-stack`，现在已改为 `dsh-stack`，见决策 05。）
 - **改名成本一次性**：只在 `cordis.patch.yml` 的 include 路径、`.gitattributes` 注释、文档里出现。
 
 ## 不选的名字

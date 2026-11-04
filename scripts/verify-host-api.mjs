@@ -2,7 +2,7 @@
 /**
  * 宿主契约校验：守卫依赖的接口是否还在。
  *
- * 为什么需要它：`preset/ds-loop.mjs` 依赖四个宿主私有契约，全都不在公开文档里：
+ * 为什么需要它：`preset/st-loop.mjs` 依赖四个宿主私有契约，全都不在公开文档里：
  *
  *   1. `agent/turn-stopping` 这个 serial 钩子在轮次收尾时被 dispatch；
  *   2. 该钩子的载荷里有 `agent`（由 agentEvents 注入，不是调用方传的）；

@@ -41,7 +41,7 @@ if (!repoUrl.includes(`/${pkg.name}`)) {
 }
 
 // ---- 2. 宿主契约字段 ----
-if (pkg.type !== 'module') fail('type 应为 module', 'ds-loop.mjs 与全部校验脚本都是 ESM')
+if (pkg.type !== 'module') fail('type 应为 module', 'st-loop.mjs 与全部校验脚本都是 ESM')
 
 if (!pkg.engines?.node) fail('缺少 engines.node')
 else if (!/\^22\.|\>=24/.test(pkg.engines.node)) {
@@ -124,7 +124,7 @@ if (packed !== null) {
   const missing = []
   if (!packed.files.includes('cordis.patch.yml')) missing.push('cordis.patch.yml')
   if (!packed.files.some(file => file.startsWith('preset/agent.cordis.yml'))) missing.push('preset/agent.cordis.yml')
-  if (!packed.files.some(file => file.startsWith('preset/ds-loop.mjs'))) missing.push('preset/ds-loop.mjs')
+  if (!packed.files.some(file => file.startsWith('preset/st-loop.mjs'))) missing.push('preset/st-loop.mjs')
   if (missing.length > 0) fail(`打包产物里缺少关键文件：${missing.join('、')}`, '装完会挂载失败')
 
   const skills = packed.files.filter(file => /^preset\/skills\/[^/]+\/SKILL\.md$/.test(file))

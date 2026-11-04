@@ -1,10 +1,12 @@
 MIT License
 
-Copyright (c) 2026 AICodeKing — the `ds-*` skills in preset/skills/, verbatim
-from https://github.com/aicodeking/deepseek-stack
+Copyright (c) 2026 AICodeKing — the skill bodies in preset/skills/, derived
+from https://github.com/aicodeking/deepseek-stack and renamed from `ds-*` to
+`st-*` (directory names, frontmatter `name`, and in-body gestures only; the
+prose is unchanged)
 
 Copyright (c) 2026 dsh-ds-stack-preset contributors — the preset composition
-(preset/agent.cordis.yml), the loop guard (preset/ds-loop.mjs), and the
+(preset/agent.cordis.yml), the loop guard (preset/st-loop.mjs), and the
 bundle wiring (cordis.patch.yml), as first published at
 https://github.com/TonyZiYuan/dsh-ds-stack-preset
 

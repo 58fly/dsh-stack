@@ -4,6 +4,29 @@
 
 分类固定为：**新增 / 修复 / 变更 / 文档 / 移除**。条目写「用户能感知到什么」，内部重构不单独成条。
 
+## [0.2.0] - 2026-11-04
+
+**破坏性变更：29 个技能的手势从 `/ds-*` 全部改为 `/st-*`，预设 id 从 `ds-stack` 改为 `dsh-stack`。** 你之前记住的 `/ds-tdd`、`/ds-ship` 这类命令不再存在，改用 `/st-tdd`、`/st-ship`；已保存的预设选择需要重选一次。
+
+改名的原因：本预设与 `dsh-ds-stack-preset` 用的是同一份技能、同一套命名，两者可以并存安装，装完后技能列表里会出现两套一模一样的 `ds-tdd`，肉眼无法判断当前会话用的是哪一套。
+
+### 变更
+
+- **29 个技能改名**：目录名、frontmatter `name:`、正文里指向别的技能的 34 处手势，全部 `ds-*` → `st-*`。技能正文的散文一字未改，改的只是标识。
+- **预设改名**：id `ds-stack` → `dsh-stack`，显示名「DeepSeek Stack 模式」→「dsh-stack模式」，说明文案里明确写着「该模式为 DeepSeek Stack 模式」，来源说明保留。
+- **守卫改名**：文件 `preset/ds-loop.mjs` → `preset/st-loop.mjs`；打回消息的前缀从 `ds-stack checkpoint` 变成 `st-stack checkpoint`；消息里引用的技能手势同步改成 `/st-unstick`。
+- **常驻人格首行**改为「running dsh-stack模式 — the DeepSeek Stack」，与预设显示名一致。
+
+### 修复
+
+- **技能 `st-help` 的描述里还留着上游品牌词**。原文是 "Pick the right deepseek-stack skill for a task"，装在本机时看不出问题，但它把另一个仓库的名字放进了每轮重发的技能目录里。现改为 "Pick the right skill from this pack for a task"。
+- **`LICENSE` 与 `NOTICE.md` 的「逐字节 verbatim」表述已失效**。技能不再是逐字节复制（标识已改），两份文件改为「正文保留、标识改名」，并列出改了什么、为什么改、上游更新后怎么同步。
+
+### 文档
+
+- 中英 README、实现说明、验收清单、决策 03/04 全部对齐新名字；新增决策 `docs/decisions/05-技能前缀改为-st.md`。
+- 维护者视角的完整改动清单与复现方式在 `docs/发布说明.md` 的 0.2.0 一节。
+
 ## [0.1.5] - 2026-11-04
 
 ### 变更

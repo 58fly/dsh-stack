@@ -57,8 +57,8 @@ if (!includeMatch) {
 
 // ---- 2. 预设元数据必须与会话选择器里看到的一致 ----
 const wantConfig = {
-  'id: ds-stack': /^\s+id:\s*ds-stack\s*$/m,
-  'name: DeepSeek Stack 模式': /^\s+name:\s*DeepSeek Stack 模式\s*$/m,
+  'id: dsh-stack': /^\s+id:\s*dsh-stack\s*$/m,
+  'name: dsh-stack模式': /^\s+name:\s*dsh-stack模式\s*$/m,
   'order: 6': /^\s+order:\s*6\s*$/m,
 }
 for (const [label, pattern] of Object.entries(wantConfig)) {
@@ -67,7 +67,7 @@ for (const [label, pattern] of Object.entries(wantConfig)) {
 
 // ---- 3. 预设本体必须声明这些行，否则行为静默缺失 ----
 const requiredRows = [
-  ['ds-loop', '轮次收尾守卫'],
+  ['st-loop', '轮次收尾守卫'],
   ['skill-filesystem', '技能根'],
   ['tool-skill', '技能目录工具'],
   ['agent-instructions', '工作区指令注入'],

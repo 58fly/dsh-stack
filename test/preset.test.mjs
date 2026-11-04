@@ -36,8 +36,8 @@ check('include path matches package name and preset dir', () => {
 
 // 3 — 预设元数据是用户可见的东西，改了必须是有意的。
 check('preset metadata unchanged', () => {
-  assert.match(patch, /^\s+id: ds-stack\s*$/m)
-  assert.match(patch, /^\s+name: DeepSeek Stack 模式\s*$/m)
+  assert.match(patch, /^\s+id: dsh-stack\s*$/m)
+  assert.match(patch, /^\s+name: dsh-stack模式\s*$/m)
   assert.match(patch, /^\s+order: 6\s*$/m)
 })
 
@@ -48,18 +48,18 @@ check('persona prefix is present', () => {
   assert.ok(match[1].trim().length > 200, '人格文本过短，可能被误删')
 })
 
-// 5 — 守卫行存在，且配置与 ds-loop.mjs 的默认值一致。
-check('ds-loop row agrees with module defaults', () => {
-  assert.match(preset, /^- id: ds-loop$/m)
-  assert.match(preset, /name: \.\/ds-loop\.mjs/)
-  const mod = readFileSync(join(ROOT, 'preset', 'ds-loop.mjs'), 'utf8')
+// 5 — 守卫行存在，且配置与 st-loop.mjs 的默认值一致。
+check('st-loop row agrees with module defaults', () => {
+  assert.match(preset, /^- id: st-loop$/m)
+  assert.match(preset, /name: \.\/st-loop\.mjs/)
+  const mod = readFileSync(join(ROOT, 'preset', 'st-loop.mjs'), 'utf8')
   // 只匹配行首的键，避免命中注释里的同名英文单词。
   const valueIn = (text, key) => text.match(new RegExp(`^\\s*${key}:\\s*([a-z0-9]+)\\s*,?\\s*$`, 'im'))?.[1]
   for (const key of ['evidence', 'unstick', 'failStreak', 'maxSteersPerTurn', 'includeSubagents']) {
     const inYml = valueIn(preset, key)
     const inMod = valueIn(mod, key)
     assert.ok(inYml !== undefined, `agent.cordis.yml 里没有 ${key}`)
-    assert.ok(inMod !== undefined, `ds-loop.mjs DEFAULTS 里没有 ${key}`)
+    assert.ok(inMod !== undefined, `st-loop.mjs DEFAULTS 里没有 ${key}`)
     assert.equal(inYml, inMod, `${key} 在 yml 与模块默认值里不一致：${inYml} vs ${inMod}`)
   }
 })
