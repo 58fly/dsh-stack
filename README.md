@@ -260,13 +260,15 @@ npm test
 | 命令 | 检查什么 |
 |---|---|
 | `node test/ds-loop.test.mjs` | 守卫行为，17 条断言 |
-| `node test/preset.test.mjs` | 装配静态断言，12 条（人格在、守卫配置与模块默认值一致、禁用行没被改） |
+| `node test/preset.test.mjs` | 装配静态断言，13 条（人格在、守卫配置与模块默认值一致、禁用行没被改、提示词变量都在宿主注册表里） |
 | `node scripts/verify-preset.mjs` | 装配完整性：include 路径 = 包名 + 目录、技能根走 baseUrl、目录上限容得下最长描述 |
 | `node scripts/verify-skills.mjs` | 技能合法性：frontmatter、目录名 ↔ `name`、描述长度、29 个 `/ds-*` 交叉引用无死链 |
 | `node scripts/verify-manifest.mjs` | manifest 与发包产物：白名单、`engines`、`npm pack` 实际内容 |
 | `node scripts/verify-host-api.mjs` | 宿主私有契约：`agent/turn-stopping`、`agent.steer`、`session.snapshotEvents`、工具名注册表（没装 DSH 时 SKIP） |
 
 发布前另有 `scripts/verify-release.mjs`：工作区干净、tag 与版本对齐、CHANGELOG 有当前版本小节。
+
+装好的副本（`node_modules/dsh-stack`）同样能跑上面的命令——`scripts/` 也在包里。`verify-release` 例外：它要读 Git 历史，在装机副本里会直接报「不是 git 仓库」并以非零码退出，这是预期行为。
 
 ## 装在这里的意义
 

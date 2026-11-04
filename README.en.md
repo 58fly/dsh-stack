@@ -261,13 +261,15 @@ npm test
 | Command | What it checks |
 |---|---|
 | `node test/ds-loop.test.mjs` | Guard behaviour, 17 assertions |
-| `node test/preset.test.mjs` | Static assembly assertions, 12 (persona present, guard config matches module defaults, disabled rows untouched) |
+| `node test/preset.test.mjs` | Static assembly assertions, 13 (persona present, guard config matches module defaults, disabled rows untouched, prompt variables all registered by the host) |
 | `node scripts/verify-preset.mjs` | Assembly integrity: include path = package name + directory, skill root derived from baseUrl, cap fits the longest description |
 | `node scripts/verify-skills.mjs` | Skill validity: frontmatter, directory ↔ `name`, description length, no dead `/ds-*` cross-references |
 | `node scripts/verify-manifest.mjs` | Manifest and shipped artifact: allowlist, `engines`, actual `npm pack` contents |
 | `node scripts/verify-host-api.mjs` | Host-private contracts: `agent/turn-stopping`, `agent.steer`, `session.snapshotEvents`, tool-name registry (SKIPs without a DSH install) |
 
 Before publishing, `scripts/verify-release.mjs` additionally requires a clean tree, a tag matching the version, and a CHANGELOG section for the current version.
+
+An installed copy (`node_modules/dsh-stack`) can run the same commands — `scripts/` ships too. `verify-release` is the exception: it reads Git history, so inside an installed copy it reports "not a git repository" and exits non-zero. That is expected.
 
 ## Why installing here matters
 

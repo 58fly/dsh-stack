@@ -67,26 +67,31 @@ if (pkg.dsh?.client !== undefined) {
 if (!Array.isArray(pkg.files) || pkg.files.length === 0) fail('files 白名单为空')
 
 // ---- 3. 白名单与实际内容 ----
-const required = ['cordis.patch.yml', 'preset', 'README.md', 'CHANGELOG.md', 'LICENSE']
+// scripts/ 必须在白名单里：从 npm 装的副本要能跑 `npm test` 自检，
+// 而 README「自检」章节的六条命令有四条住在 scripts/ 下。
+const required = ['cordis.patch.yml', 'preset', 'test', 'scripts', 'README.md', 'CHANGELOG.md', 'LICENSE']
 for (const entry of required) {
   if (!pkg.files?.includes(entry)) fail(`files 白名单里缺少 ${entry}`)
   if (!existsSync(join(ROOT, entry))) fail(`白名单里的 ${entry} 在仓库里不存在`)
 }
 
-// 不该进包的：docs/ 与 issues/ 是维护者资料，scripts/ 是 CI 用的。
+// 不该进包的：docs/ 与 issues/ 是维护者资料。
 // 也不该入库的：AGENTS.md 是维护者本地开发约定，属于仓库外隐私，不能出现在 files 里。
-for (const entry of ['docs', 'issues', 'scripts', 'AGENTS.md']) {
+for (const entry of ['docs', 'issues', 'AGENTS.md']) {
   if (pkg.files?.includes(entry)) {
     fail(`files 白名单里不该有 ${entry}`, '维护者资料不进包，装了也看不到')
   }
 }
 
 // AGENTS.md 必须被 gitignore 且不在索引里——它是本地文件，不能随仓库公开。
-{
+// 从 npm 装的副本里既没有 .gitignore 也没有 .git，这两项自动跳过。
+if (existsSync(join(ROOT, '.gitignore'))) {
   const ignore = readFileSync(join(ROOT, '.gitignore'), 'utf8')
   if (!/^AGENTS\.md\s*$/m.test(ignore)) {
     fail('AGENTS.md 没有写进 .gitignore', '本地开发约束不入库，见本地约定')
   }
+}
+if (existsSync(join(ROOT, '.git'))) {
   try {
     const tracked = execFileSync('git', ['ls-files', '--error-unmatch', 'AGENTS.md'], {
       cwd: ROOT,
@@ -128,7 +133,7 @@ if (packed !== null) {
   }
 
   // 白名单外的文件不该出现（npm 会忽略 .gitignore 里列出的东西）。
-  const allowedPrefixes = ['cordis.patch.yml', 'preset/', 'test/', 'README', 'CHANGELOG', 'NOTICE', 'LICENSE', 'package.json']
+  const allowedPrefixes = ['cordis.patch.yml', 'preset/', 'test/', 'scripts/', 'README', 'CHANGELOG', 'NOTICE', 'LICENSE', 'package.json']
   const stray = packed.files.filter(file => !allowedPrefixes.some(prefix => file === prefix || file.startsWith(prefix)))
   if (stray.length > 0) {
     fail(`打包产物里有白名单之外的文件：${stray.slice(0, 5).join('、')}${stray.length > 5 ? ' 等' : ''}`)
