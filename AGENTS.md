@@ -6,13 +6,11 @@
 
 `dsh-stack` 是 DSH 的 **agent preset bundle**：它注册一个叫「DeepSeek Stack 模式」的预设（preset id `ds-stack`，会话选择器里显示这个名字），由三部分组成：
 
-1. **常驻人格**：`preset/agent.cordis.yml` 的 `persona.prefix`，把上游 `ds-mode` 的规则压缩成系统提示。
+1. **常驻人格**：`preset/agent.cordis.yml` 的 `persona.prefix`，把 `ds-mode` 的规则压缩成系统提示。
 2. **29 个技能**：`preset/skills/`，逐字节镜像 [aicodeking/deepseek-stack](https://github.com/aicodeking/deepseek-stack)。
 3. **轮次收尾守卫**：`preset/ds-loop.mjs`，监听 `agent/turn-stopping`，命中规则就 `steer` 一条消息让这一轮继续。
 
 它**不改变** Agent 能做什么（工具、沙箱、审批、压缩、委派都与内置 `standard` 预设逐行一致），只改变它的工作方式。
-
-上游来源：[TonyZiYuan/dsh-ds-stack-preset](https://github.com/TonyZiYuan/dsh-ds-stack-preset)（保留为 `upstream` remote）。
 
 ## 铁律：npm 与 GitHub 必须完全对齐
 
@@ -63,9 +61,9 @@ npm run verify:release          # 比对本地 / npm latest / git tag 三方一�
 
 ## 版本号
 
-- 起点 **0.1.0**，与上游 `1.0.0` 无关——这是自维护线，不是上游的续版。
+- 起点 **0.1.0**。版本号只反映本仓库自己的演进，不与任何外部仓库对齐。
 - 语义化版本，但按「用户可感知的行为变化」定级：改守卫规则、改人格文本、增删技能 → minor；只修 bug、改文档、改 CI → patch。
-- 上游技能镜像更新不算本包行为变化，patch 即可。
+- 技能镜像更新不算本包行为变化，patch 即可。
 
 ## 目录规范
 
@@ -74,7 +72,7 @@ cordis.patch.yml        bundle 补丁：插入一条 agent-preset 声明行
 preset/
   agent.cordis.yml      预设组合本体（人格、技能根、守卫、各工具行）
   ds-loop.mjs           轮次收尾守卫
-  skills/               29 个 ds-* 技能，逐字节镜像上游
+  skills/               29 个 ds-* 技能，逐字节镜像技能来源
 test/
   ds-loop.test.mjs      守卫单测（零依赖）
   preset.test.mjs       装配静态断言（零依赖）
@@ -100,8 +98,8 @@ issues/                 每个改动的动机与验收留档（NN-短名.md）
 
 ## 技能目录的维护规则
 
-- `preset/skills/**` **逐字节镜像上游**，本仓库不改写技能正文。这条是更新路径的基础：跟上游只需覆盖目录，永远不会产生合并冲突。
-- 需要本地改造某个技能时，先改上游或另建技能目录，不要在这里动——动了就失去镜像能力。
+- `preset/skills/**` **逐字节镜像技能来源**，本仓库不改写技能正文。这条是更新路径的基础：同步技能只需覆盖目录，永远不会产生合并冲突。
+- 需要本地改造某个技能时，先改技能来源或另建技能目录，不要在这里动——动了就失去镜像能力。
 - 技能目录名必须等于 frontmatter `name`。`scripts/verify-skills.mjs` 会拦。
 - 每条 `description` 会作为持久前缀每轮重发（29 条合计约 6.8k 字符 ≈ 1.7k token）。`tool-skill` 的 `catalogDescriptionMaxLength: 400` 是按最长描述（`ds-context-reset`，349 字符）定的，调小会截掉末尾的「Use when …」触发条件。
 
@@ -125,13 +123,15 @@ issues/                 每个改动的动机与验收留档（NN-短名.md）
 
 npm 源为首选，Git 源作为备选并标注差异。原因：宿主对 Git 源安装的更新检查走 `git ls-remote -- <repo> HEAD`（`dsh-plugin-manager/lib/types/github-connection.js:32`），commit 就是它的版本标识，插件页的「有新版本」会显示 commit SHA 而不是 `0.3.6` 这样的版本号。这无法从插件侧修正，只能靠安装方式规避。
 
-## 跟上游更新
+## 同步技能来源
+
+技能正文来自 [aicodeking/deepseek-stack](https://github.com/aicodeking/deepseek-stack)，本仓库不改写。需要同步时：
 
 ```bash
-git fetch upstream
-git diff upstream/main -- ds-stack/skills/        # 上游目录名仍是 ds-stack
-rsync -a --delete upstream-skills/ preset/skills/
+git clone --depth 1 https://github.com/aicodeking/deepseek-stack /tmp/skills-src
+rsync -a --delete /tmp/skills-src/skills/ preset/skills/
 node scripts/verify-skills.mjs
+npm test
 ```
 
-若上游新增技能导致 catalog 字数越界，`verify-skills.mjs` 会报当前值与上限，再决定是否调 `catalogDescriptionMaxLength` 或删技能目录。
+若技能来源新增条目导致 catalog 字数越界，`verify-skills.mjs` 会报当前值与上限，再决定是否调 `catalogDescriptionMaxLength` 或删技能目录。
