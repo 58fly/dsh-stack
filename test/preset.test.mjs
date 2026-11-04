@@ -131,7 +131,7 @@ check('manifest is publishable', () => {
 
 // 13 — 预设里的每个 {{变量}} 都必须是宿主注册过的。
 //
-// 上游就是死在这里：persona.suffix 写了 `{{cwd}}`，而宿主只注册 provider 与 model
+// 这里出过致命故障：persona.suffix 写了 `{{cwd}}`，而宿主只注册 provider 与 model
 // （dsh-agent-loop/lib/index.js:1607-1608），渲染 persona-suffix 时抛 UNKNOWN，
 // 会话在模型走第一步之前就结束。这类错误没有降级路径，只能在提交前拦住。
 //

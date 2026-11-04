@@ -141,7 +141,7 @@ check('checkTools 全是宿主真实注册的 shell 工具', () => {
 //
 // 这是最狠的一条失败模式：写一个不存在的变量不会降级成空字符串，
 // `deployment:persona-suffix` 渲染时直接抛 UNKNOWN，会话在模型走第一步之前就死。
-// 上游正是这么死的（suffix 里写了 {{cwd}}），整场会话只能切回 standard。
+// 这里出过致命故障（suffix 里写了 {{cwd}}），整场会话只能切回 standard。
 // 宿主目前只注册两处（dsh-agent-loop/lib/index.js），所以照实抓出来比对。
 check('预设用的 {{变量}} 都是宿主注册过的', () => {
   const loopText = source('dsh-agent-loop', 'lib/index.js')

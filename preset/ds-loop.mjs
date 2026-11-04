@@ -1,7 +1,7 @@
 /**
  * ds-loop — the harness half of the DeepSeek Stack preset.
  *
- * The upstream pack (https://github.com/aicodeking/deepseek-stack) states two
+ * The source pack (https://github.com/aicodeking/deepseek-stack) states two
  * rules as commands a model is supposed to follow on its own:
  *
  *   1. `ds-verify-loop`: after every change, run a real command that proves it,

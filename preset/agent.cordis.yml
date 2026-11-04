@@ -1,7 +1,7 @@
 # DeepSeek Stack (ds-stack) — an agent preset that ports
 # https://github.com/aicodeking/deepseek-stack into DSH.
 #
-# The upstream project is a skill pack, not a harness: SKILL.md files that make
+# The source pack is not a harness: SKILL.md files that make
 # cheap models work like expensive ones (restate, read first, smallest verified
 # step, evidence before "done", a hard stop after repeating a failed idea).
 # DSH already renders skills through `dsh-tool-skill` / `dsh-skill-filesystem`,

@@ -2,7 +2,7 @@
 /**
  * 技能目录校验：preset/skills/ 是否仍是一份可被宿主装载的技能包。
  *
- * 这些技能逐字节镜像上游，所以本脚本不评判技能写得好不好，
+ * 这些技能逐字节镜像技能来源，所以本脚本不评判技能写得好不好，
  * 只拦「装进 catalog 之后会静默失效」的四类问题：
  *
  *   1. frontmatter 缺 name/description —— 该条不进 catalog，用户看不到。
@@ -75,7 +75,7 @@ for (const dir of dirs) {
   else if (name !== dir) {
     fail(
       `目录名与 frontmatter name 不一致：${dir} ≠ ${name}`,
-      '宿主按 name 建立 /ds-* 手势，目录名只是镜像上游时的落点'
+      '宿主按 name 建立 /ds-* 手势，目录名只是镜像技能来源时的落点'
     )
   } else {
     if (byName.has(name)) fail(`技能名重复：${name}`)
@@ -89,7 +89,7 @@ for (const dir of dirs) {
     if (cap > 0 && description.length > cap) {
       fail(
         `preset/skills/${dir} 的描述 ${description.length} 字符，超过上限 ${cap}`,
-        '超长会被截断，而上游把「Use when …」放在末尾，截掉就等于失去触发条件'
+        '超长会被截断，而技能包原文把「Use when …」放在末尾，截掉就等于失去触发条件'
       )
     }
   }
