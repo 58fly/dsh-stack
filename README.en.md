@@ -281,6 +281,7 @@ npm test
 | `node test/st-loop.test.mjs` | Guard behaviour, 17 assertions |
 | `node test/preset.test.mjs` | Static assembly assertions, 15 (persona present, guard config matches module defaults, disabled rows untouched, prompt variables all registered by the host, uninstall guard agrees with the preset id in all three places) |
 | `node test/uninstall-guard.test.mjs` | Disable/uninstall behaviour, 25 (a normal exit writes nothing, disabling retracts the pointer, re-installing restores it, a user-chosen preset is never overwritten, session caches keep everything but the preset field) |
+| `node scripts/verify-lines.mjs` | **Preset line contract**: whether each line's package/subpath resolves on the current host and whether its `Config` accepts the keys we pass. Falls back to the `test/host-surface.json` specifier snapshot when no host is readable (regenerate with `scripts/snapshot-host-surface.mjs` after a host upgrade) |
 | `node scripts/verify-preset.mjs` | Assembly integrity: include path = package name + directory, skill root derived from baseUrl, cap fits the longest description |
 | `node scripts/verify-skills.mjs` | Skill validity: frontmatter, directory ↔ `name`, description length, no dead `/st-*` cross-references |
 | `node scripts/verify-manifest.mjs` | Manifest and shipped artifact: allowlist, `engines`, actual `npm pack` contents |

@@ -280,6 +280,7 @@ npm test
 | `node test/st-loop.test.mjs` | 守卫行为，17 条断言 |
 | `node test/preset.test.mjs` | 装配静态断言，15 条（人格在、守卫配置与模块默认值一致、禁用行没被改、提示词变量都在宿主注册表里、卸载守卫与预设 id 三处一致） |
 | `node test/uninstall-guard.test.mjs` | 停用/卸载行为，25 条（正常退出不动文件、停用收指针、重装恢复、用户另选不覆盖、投影缓存只改预设字段） |
+| `node scripts/verify-lines.mjs` | **预设行契约**：每行的包/子路径在当前宿主上能否 resolve，config 键能否被该行的 `Config` 接受。没有宿主时用 `test/host-surface.json` 快照判定（宿主升级后重跑 `scripts/snapshot-host-surface.mjs`） |
 | `node scripts/verify-preset.mjs` | 装配完整性：include 路径 = 包名 + 目录、技能根走 baseUrl、目录上限容得下最长描述 |
 | `node scripts/verify-skills.mjs` | 技能合法性：frontmatter、目录名 ↔ `name`、描述长度、29 个 `/st-*` 交叉引用无死链 |
 | `node scripts/verify-manifest.mjs` | manifest 与发包产物：白名单、`engines`、`npm pack` 实际内容 |

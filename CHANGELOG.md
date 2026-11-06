@@ -4,6 +4,26 @@
 
 分类固定为：**新增 / 修复 / 变更 / 文档 / 移除**。条目写「用户能感知到什么」，内部重构不单独成条。
 
+## [0.3.2] - 2026-11-06
+
+**修复「装上了但用不了」：插件页显示 `dsh-stack 模式（加载失败）`，新建会话里选不到它。** 宿主本身不报任何错，只有配置页那行红字。
+
+### 修复
+
+- **预设里有一行指向宿主已经收回的子路径**。`@deepseek-ai/dsh-tool-subagent-control/list-agents` 在 0.2.2 里不存在了 —— `list_agents` 工具已经由该包的主入口自己注册（`apply()` 第一句就是 `registerListAgents(ctx)`），子路径不在 `exports` 里。整行 import 抛 `ERR_PACKAGE_PATH_NOT_EXPORTED`，整个预设进 broken 状态，于是「加载失败」。
+- 删掉那一行。**能力不变**：`list_agents` 仍由 `tool-subagent-control` 提供，其余行一条没动。
+
+### 新增
+
+- **`scripts/verify-lines.mjs`**：逐行核对预设 —— 每行的模块在当前宿主上能否 resolve，以及我们给的 config 键能否被该行导出的 `Config` 接受。有宿主时真解析，没有时用说明符快照。
+- **`test/host-surface.json`**：宿主 0.2.2-rc.1 的 960 个可解析说明符快照，由 `scripts/snapshot-host-surface.mjs` 生成。CI 里没有 DSH 也能确定地拦住「引用了一个宿主没有的说明符」。
+- `npm test` 与发布门禁都会跑这条：**预设行加载不了，就不许发布**。
+
+### 文档
+
+- `docs/验收清单.md` 新增「I. 预设行契约」：装到真实 DSH 后配置页无「加载失败」，会话选择器里能选到。
+- `AGENTS.md` 补一条硬规则：预设里每一行的 `name` 都必须能被当前宿主解析，宿主升级后重跑快照并 review 增删。
+
 ## [0.3.1] - 2026-11-06
 
 **修复 0.3.0 的一个致命缺陷：从 npm 装完之后，`npx dsh-stack` 什么都不做 —— 退出码 0、零输出。** 从仓库直接 `node bin/dsh-stack.mjs` 一切正常，所以这个缺陷在开发机上完全看不出来。

@@ -226,11 +226,12 @@
   isolate:
     workflowEngine: true
   config:
+    # 宿主 0.2.2 起，list_agents 由 tool-subagent-control 的主入口自己注册
+    # （apply() 第一句就是 registerListAgents(ctx)），子路径 ./list-agents 已不在
+    # 包的 exports 里。再写一行 name 指向该子路径会让整行 import 抛
+    # ERR_PACKAGE_PATH_NOT_EXPORTED，预设直接进 broken 状态，配置页显示「加载失败」。
     - id: tool-subagent-control
       name: '@deepseek-ai/dsh-tool-subagent-control'
-
-    - id: tool-subagent-list-agents
-      name: '@deepseek-ai/dsh-tool-subagent-control/list-agents'
 
     - id: tool-subagent
       name: '@deepseek-ai/dsh-tool-subagent'

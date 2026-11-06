@@ -163,6 +163,21 @@ if (process.argv.includes('--verify')) {
   }
 }
 
+// ---- 宿主行契约 ----
+// 一个解析不了的行会让整个预设进 broken：配置页显示「加载失败」，会话选择器里选不到，
+// 宿主自己不报错。0.3.1 就是这么发出去的，所以这条必须挡住发布。
+try {
+  execFileSync(process.execPath, [join(ROOT, 'scripts/verify-lines.mjs')], { cwd: ROOT, stdio: 'pipe' })
+  notes.push('预设行在当前宿主依赖树上全部可解析')
+} catch (error) {
+  const detail = String(error.stdout ?? '') + String(error.stderr ?? '')
+  const firstBad = detail.split('\n').find((line) => line.includes('✖')) ?? ''
+  fail(
+    `预设行在当前宿主上加载不了${firstBad ? `：${firstBad.trim()}` : ''}`,
+    '跑 node scripts/verify-lines.mjs 看具体哪一行；没有宿主依赖树就 npm i --no-save @deepseek-ai/dsh@0.2.2-rc.1'
+  )
+}
+
 // ---- 输出 ----
 for (const note of notes) console.log(`  ${note}`)
 
