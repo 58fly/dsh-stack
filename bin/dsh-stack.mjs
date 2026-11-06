@@ -22,9 +22,9 @@
  * 全部操作用文本级定向改写，不重排用户的 YAML/JSON，且可重复执行。
  */
 
-import { existsSync, rmSync } from 'node:fs'
+import { existsSync, realpathSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 
 import {
   PRESET_ID,
@@ -438,10 +438,19 @@ function main() {
 
 // 只有被直接执行时才跑 CLI：测试要 import 这些函数，不能因为 import 就把
 // 用户的 profile 改一遍。
+//
+// 必须比 realpath，不能比原始路径。npm 安装后 `node_modules/.bin/dsh-stack`
+// 是指向本文件的符号链接：`process.argv[1]` 是**链接路径**，而 `import.meta.url`
+// 已被 node 解析成**真实路径**，两者字符串永不相等，命令于是静默什么都不做
+// （退出码 0、零输出）——比报错更难发现。0.3.0 就是这样：从仓库直接跑正常，
+// 装完 `npx dsh-stack` 完全没反应。
 const isMain = (() => {
+  const entry = process.argv[1]
+  if (entry === undefined) return false
   try {
-    return import.meta.url === pathToFileURL(process.argv[1]).href
-  } catch {
+    return realpathSync(entry) === realpathSync(fileURLToPath(import.meta.url))
+  }
+  catch {
     return false
   }
 })()

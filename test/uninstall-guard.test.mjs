@@ -13,9 +13,11 @@
  * 它们同时失败才说明判据错了，所以两条都必须在这里。
  */
 import assert from 'node:assert/strict'
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const lifecycle = await import(new URL('../preset/lifecycle.mjs', import.meta.url).href)
 const guard = await import(new URL('../preset/uninstall-guard.mjs', import.meta.url).href)
@@ -368,6 +370,27 @@ check('doctor 认出 bundles 与依赖的残留，并能清掉', () => {
   assert.deepEqual(manifest.dsh.profile.bundles, [])
   assert.equal(manifest.dependencies['dsh-stack'], undefined)
   rmSync(home, { recursive: true, force: true })
+})
+
+check('CLI 经符号链接调用时仍会被执行', () => {
+  // npm 安装后 node_modules/.bin/dsh-stack 是指向 bin/dsh-stack.mjs 的符号链接。
+  // 判断「我是不是被直接执行的」若比较原始路径，链接路径 ≠ 真实路径，CLI 会静默
+  // 什么都不做：退出码 0、零输出 —— 用户装完 npx dsh-stack 完全没反应。
+  const root = mkdtempSync(join(tmpdir(), 'dsh-stack-bin-'))
+  try {
+    const linkDir = join(root, 'node_modules', '.bin')
+    mkdirSync(linkDir, { recursive: true })
+    const link = join(linkDir, 'dsh-stack')
+    symlinkSync(fileURLToPath(new URL('../bin/dsh-stack.mjs', import.meta.url)), link, 'file')
+    const home = join(root, 'home')
+    mkdirSync(join(home, 'profiles'), { recursive: true })
+    const result = spawnSync(process.execPath, [link, 'status', '--home', home], { encoding: 'utf8' })
+    assert.equal(result.status, 0, `退出码应为 0，实际 ${result.status}：${result.stderr}`)
+    assert.match(result.stdout, /dsh-stack status/, '经符号链接调用时没有任何输出')
+  }
+  finally {
+    rmSync(root, { recursive: true, force: true })
+  }
 })
 
 console.log(`\n${passed} checks passed`)
