@@ -247,7 +247,25 @@ exactly what you could not verify.
 - **技能内容不改写**：升级技能的办法是把技能来源的 `skills/` 重新镜像到 `preset/skills/`，本包不修改技能正文，因此不会有合并冲突。
 - **技能目录会造成每轮固定成本**：摘要计 29 条、合计 6830 字符（≈1708 token），作为持久前缀每轮都会重发。想更省，**删掉不用的技能目录**（目录是唯一事实来源，删了就不会出现在目录里）；不要靠调小 `catalogDescriptionMaxLength`——技能包原文把「Use when …」放在每条描述末尾，截断先丢的正是触发条件，而这笔 token 花的就是触发能力。
 - **守卫没有平台分支**：Windows 上 shell 工具名是 `pwsh`，已在 `checkTools` 默认值里；如果你关掉 `tool-pwsh` 换成别的执行器，记得同步这个列表，否则守卫静默失效。
+- **本包会写一行你的 profile 配置**：只有「收回悬空的默认预设指针」这一件事，写在 profile 的 `cordis.patch.yml` 里，只改一个标量的值。插件仍然可用时它一个字节都不改——你正常关掉 DSH 不会丢默认预设。
 - **`bash` 可以绕过第一条守卫**：一条 `bash` 同时写文件并跑命令时，它只被算作「验证」。这是有意的取舍（否则 `sed -i && npm test` 会误报），代价是「全程用 bash 改文件」的工作方式不受约束。
+
+## 停用与卸载
+
+本预设会向宿主注册一个预设候选。你在会话选择器里把它设为默认后，这个选择记在 profile 的 `cordis.patch.yml`（`agent-preset-registry` 那一行的 `selectedDefault`）。宿主停用 bundle 时只删 bundle 登记、卸载时只删目录，**都不动这个指针**——指针悬空之后，新建会话在解析预设时抛 `agent-preset/not-found`，看到的现象是「装过这个插件之后 DSH 新建不了会话」，而且卸载了也不会自己好。
+
+所以本包带了一个守卫和一个命令：
+
+| 你的处境 | 怎么做 | 会发生什么 |
+|---|---|---|
+| 想停用，插件还留着 | 在插件管理器里停用 | 守卫在停用时收回指针；重新启用后自动恢复你原来的选择（前提是你期间没另选过） |
+| 准备彻底卸载 | 先 `npx dsh-stack uninstall`，再在插件管理器里卸载 | 先收指针，再摘 bundle 登记、依赖、目录，不留崩溃窗口 |
+| 已经崩了、新建不了会话 | `npx dsh-stack doctor`，再 `npx dsh-stack doctor --fix` | 收回指针、清掉残留登记与旧会话缓存里的预设标记，重启 DSH 即可 |
+| 只想确认状态 | `npx dsh-stack status` | 每个 profile 一行：包在不在、bundles 有没有登记、指针指向谁 |
+
+命令自己找 `~/.dsh`（`--home` 指定，`--profile` 只处理一个），全程幂等，重复跑不会累积改动，`--dry-run` 只报告不写盘。它只改 `selectedDefault` 这一个标量的值以及必要的登记项，不重排你的 YAML/JSON，也不碰会话正文与标题。
+
+为什么不做成界面按钮：按钮只在插件还在的时候存在，而这个问题的现场恰恰是插件已经不在了。
 
 ## 自检
 
@@ -260,11 +278,13 @@ npm test
 | 命令 | 检查什么 |
 |---|---|
 | `node test/st-loop.test.mjs` | 守卫行为，17 条断言 |
-| `node test/preset.test.mjs` | 装配静态断言，13 条（人格在、守卫配置与模块默认值一致、禁用行没被改、提示词变量都在宿主注册表里） |
+| `node test/preset.test.mjs` | 装配静态断言，15 条（人格在、守卫配置与模块默认值一致、禁用行没被改、提示词变量都在宿主注册表里、卸载守卫与预设 id 三处一致） |
+| `node test/uninstall-guard.test.mjs` | 停用/卸载行为，25 条（正常退出不动文件、停用收指针、重装恢复、用户另选不覆盖、投影缓存只改预设字段） |
 | `node scripts/verify-preset.mjs` | 装配完整性：include 路径 = 包名 + 目录、技能根走 baseUrl、目录上限容得下最长描述 |
 | `node scripts/verify-skills.mjs` | 技能合法性：frontmatter、目录名 ↔ `name`、描述长度、29 个 `/st-*` 交叉引用无死链 |
 | `node scripts/verify-manifest.mjs` | manifest 与发包产物：白名单、`engines`、`npm pack` 实际内容 |
-| `node scripts/verify-host-api.mjs` | 宿主私有契约：`agent/turn-stopping`、`agent.steer`、`session.snapshotEvents`、工具名注册表（没装 DSH 时 SKIP） |
+| `node scripts/verify-mount.mjs` | 挂载：按真实安装形态铺进临时 profile，让宿主装载器解析两条相对路径，确认守卫与 include 都落在正确的文件上（9 项，没装 DSH 时 SKIP） |
+| `node scripts/verify-host-api.mjs` | 宿主私有契约：`agent/turn-stopping`、`agent.steer`、`session.snapshotEvents`、工具名注册表、`effect` 的 disposer 语义、停用 bundle 不动指针（9 项；桌面端以 asar 打包时打印解包命令后 SKIP） |
 
 发布前另有 `scripts/verify-release.mjs`：工作区干净、tag 与版本对齐、CHANGELOG 有当前版本小节。
 

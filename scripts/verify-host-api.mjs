@@ -33,6 +33,19 @@ const CANDIDATES = [
 
 const root = CANDIDATES.find(candidate => existsSync(join(candidate, 'node_modules', '@deepseek-ai')))
 if (root === undefined) {
+  // 新版桌面端把 dsh 打进 app.asar，普通 node 读不进 asar 内部，所以这里必然
+  // 匹配不到 —— 不是没装，是装了却看不见。给出可执行的一步，而不是一句 SKIP。
+  const asarCandidates = [
+    '/Applications/DeepSeek Harness.app/Contents/Resources/app.asar',
+    '/Applications/DeepSeek-Harness.app/Contents/Resources/app.asar',
+  ]
+  const asar = asarCandidates.find(candidate => existsSync(candidate))
+  if (asar !== undefined) {
+    console.log(`SKIP 宿主以 asar 打包，普通 node 读不进去：${asar}`)
+    console.log('     解包后指定 DSH_ROOT 再跑：')
+    console.log(`       npx @electron/asar extract "${asar}" /tmp/dsh-asar && DSH_ROOT=/tmp/dsh-asar/dsh node scripts/verify-host-api.mjs`)
+    process.exit(0)
+  }
   console.log('SKIP 未找到 DSH 安装目录（设置 DSH_ROOT 可指定）；宿主契约校验只在装了 DSH 的机器上有意义')
   process.exit(0)
 }
@@ -163,6 +176,35 @@ check('预设用的 {{变量}} 都是宿主注册过的', () => {
     )
   }
   return used.length === 0 ? '未使用模板变量' : `${[...new Set(used)].join(', ')}`
+})
+
+// ---- 7. 卸载守卫依赖的 effect disposer 契约 ----
+//
+// `preset/uninstall-guard.mjs` 靠 `ctx.effect(…)` 在 fiber 销毁时收到通知 ——
+// 停用 bundle、卸载插件、热重载都走这条路径。宿主换掉这套收集器，守卫不会报错，
+// 只会在离开时静默失效，而这恰好是它唯一该起作用的时刻。
+check('cordis effect 在 fiber 销毁时执行 disposer', () => {
+  const text = source('cordis', 'lib/index.js')
+  must(text, 'effect(execute, label = "anonymous")', 'effect 方法')
+  must(text, 'runDisposable(disposable)', 'dispose 时的执行入口')
+  must(text, 'this._disposables.delete(dispose)', 'disposer 收集点')
+  return '@deepseek-ai/cordis/lib/index.js'
+})
+
+// ---- 8. 「停用 bundle 不动默认预设指针」这个前提仍然成立 ----
+//
+// 守卫的全部意义建立在这个缺口上。宿主哪天补上了这一步，守卫只是多余的（无害），
+// 但如果宿主**改了写法**（比如把 selectedDefault 也一起清了），README 里的机制
+// 说明就该跟着改，这条断言逼我们回来看一眼。
+check('plugin-manager 停用 bundle 时不动 selectedDefault', () => {
+  const text = source('dsh-plugin-manager', 'lib/index.js')
+  const at = text.indexOf('async selectBundle(')
+  if (at === -1) throw new Error('找不到 selectBundle，宿主插件管理器结构变了')
+  const body = text.slice(at, at + 2000)
+  if (body.includes('selectedDefault')) {
+    throw new Error('selectBundle 现在会写 selectedDefault —— README/实现说明里的机制描述需要更新')
+  }
+  return 'selectBundle 只改 dsh.profile.bundles'
 })
 
 // ---- 输出 ----

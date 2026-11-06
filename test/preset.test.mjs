@@ -152,4 +152,39 @@ check('preset only uses host-registered prompt variables', () => {
   )
 })
 
+// 14 — 卸载守卫：预设 id 在三个地方必须一致，否则守卫收的是别人的指针。
+//
+// 三处硬耦合：cordis.patch.yml 的 `config.id`（宿主看到的预设 id）、
+// 同一文件守卫行的 `presetId`、以及 preset/lifecycle.mjs 的 `PRESET_ID`。
+// 改一处忘另一处不会报错 —— 守卫照常运行，只是永远发现不了悬空的那一个。
+check('uninstall guard agrees on the preset id', () => {
+  const rowOf = (id) => patch.split(/- id: /).find(chunk => chunk.startsWith(id))
+  const presetRow = rowOf('preset-dsh-stack')
+  assert.ok(presetRow !== undefined, '缺少预设声明行')
+  const declaredId = /^\s+id:\s*([a-z0-9-]+)\s*$/m.exec(presetRow)?.[1]
+  const guardRow = rowOf('st-stack-uninstall-guard')
+  assert.ok(guardRow !== undefined, '缺少卸载守卫行')
+  const guardPresetId = /^\s+presetId:\s*([a-z0-9-]+)\s*$/m.exec(guardRow)?.[1]
+  const guardFallback = /^\s+fallbackId:\s*([a-z0-9-]+)\s*$/m.exec(guardRow)?.[1]
+  const lifecycle = readFileSync(join(ROOT, 'preset', 'lifecycle.mjs'), 'utf8')
+  const moduleId = /export const PRESET_ID = '([a-z0-9-]+)'/.exec(lifecycle)?.[1]
+  assert.equal(guardPresetId, declaredId, `守卫的 presetId（${guardPresetId}）与预设 id（${declaredId}）不一致`)
+  assert.equal(moduleId, declaredId, `lifecycle.PRESET_ID（${moduleId}）与预设 id（${declaredId}）不一致`)
+  assert.equal(guardFallback, 'standard', 'fallbackId 必须指向宿主内置、永远存在的预设')
+})
+
+// 15 — 守卫与命令行的模块路径必须解析到仓库里的真实文件。
+check('uninstall guard and CLI point at real files', () => {
+  const rowOf = (id) => patch.split(/- id: /).find(chunk => chunk.startsWith(id))
+  // insert[].name 以 patch 文件目录（包目录）为基准被重写，所以必须是 ./preset/...；
+  // 写成 ./node_modules/dsh-stack/preset/... 会变成 <包目录>/node_modules/...，多一层。
+  const declared = /name:\s*"\.\/(preset\/[^"]+)"/.exec(rowOf('st-stack-uninstall-guard'))?.[1]
+  assert.equal(declared, 'preset/uninstall-guard.mjs')
+  for (const file of ['preset/uninstall-guard.mjs', 'preset/lifecycle.mjs', 'bin/dsh-stack.mjs']) {
+    assert.ok(existsSync(join(ROOT, file)), `${file} 不存在`)
+  }
+  assert.equal(pkg.bin?.['dsh-stack'], './bin/dsh-stack.mjs')
+  assert.ok(pkg.files.includes('bin'), 'bin 不在 files 白名单里，装了之后没有卸载命令')
+})
+
 console.log(`\n${passed} checks passed`)

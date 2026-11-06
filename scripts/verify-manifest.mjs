@@ -66,10 +66,17 @@ if (pkg.dsh?.client !== undefined) {
 
 if (!Array.isArray(pkg.files) || pkg.files.length === 0) fail('files 白名单为空')
 
+// 优雅卸载命令必须随包分发：用户卸载时手上只有这个包，命令不在包里等于没有。
+if (pkg.bin?.['dsh-stack'] !== './bin/dsh-stack.mjs') {
+  fail(`package.json bin 应声明 dsh-stack → ./bin/dsh-stack.mjs，实际 ${JSON.stringify(pkg.bin)}`)
+} else if (!existsSync(join(ROOT, 'bin', 'dsh-stack.mjs'))) {
+  fail('bin/dsh-stack.mjs 不存在')
+}
+
 // ---- 3. 白名单与实际内容 ----
 // scripts/ 必须在白名单里：从 npm 装的副本要能跑 `npm test` 自检，
 // 而 README「自检」章节的六条命令有四条住在 scripts/ 下。
-const required = ['cordis.patch.yml', 'preset', 'test', 'scripts', 'README.md', 'CHANGELOG.md', 'LICENSE']
+const required = ['cordis.patch.yml', 'preset', 'bin', 'test', 'scripts', 'README.md', 'CHANGELOG.md', 'LICENSE']
 for (const entry of required) {
   if (!pkg.files?.includes(entry)) fail(`files 白名单里缺少 ${entry}`)
   if (!existsSync(join(ROOT, entry))) fail(`白名单里的 ${entry} 在仓库里不存在`)
@@ -125,6 +132,10 @@ if (packed !== null) {
   if (!packed.files.includes('cordis.patch.yml')) missing.push('cordis.patch.yml')
   if (!packed.files.some(file => file.startsWith('preset/agent.cordis.yml'))) missing.push('preset/agent.cordis.yml')
   if (!packed.files.some(file => file.startsWith('preset/st-loop.mjs'))) missing.push('preset/st-loop.mjs')
+  // 生命周期三个文件缺一：守卫加载不了，或者命令跑不起来。
+  for (const critical of ['preset/uninstall-guard.mjs', 'preset/lifecycle.mjs', 'bin/dsh-stack.mjs']) {
+    if (!packed.files.includes(critical)) missing.push(critical)
+  }
   if (missing.length > 0) fail(`打包产物里缺少关键文件：${missing.join('、')}`, '装完会挂载失败')
 
   const skills = packed.files.filter(file => /^preset\/skills\/[^/]+\/SKILL\.md$/.test(file))
@@ -133,7 +144,7 @@ if (packed !== null) {
   }
 
   // 白名单外的文件不该出现（npm 会忽略 .gitignore 里列出的东西）。
-  const allowedPrefixes = ['cordis.patch.yml', 'preset/', 'test/', 'scripts/', 'README', 'CHANGELOG', 'NOTICE', 'LICENSE', 'package.json']
+  const allowedPrefixes = ['cordis.patch.yml', 'preset/', 'bin/', 'test/', 'scripts/', 'README', 'CHANGELOG', 'NOTICE', 'LICENSE', 'package.json']
   const stray = packed.files.filter(file => !allowedPrefixes.some(prefix => file === prefix || file.startsWith(prefix)))
   if (stray.length > 0) {
     fail(`打包产物里有白名单之外的文件：${stray.slice(0, 5).join('、')}${stray.length > 5 ? ' 等' : ''}`)

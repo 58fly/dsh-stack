@@ -248,7 +248,25 @@ Tunable fields (the `st-loop` row in `preset/agent.cordis.yml`):
 - **Skill content is never rewritten**: to upgrade, re-mirror the pack `skills/` over `preset/skills/`. This package does not touch skill bodies, so there is nothing to merge.
 - **The skill catalog costs a fixed prefix every turn**: 29 summaries, 6830 chars (≈1708 tokens), resent as durable prefix. To spend less, **delete the skill directories you do not use** (the directory is the only source of truth); do not lower `catalogDescriptionMaxLength` — the pack puts the "Use when …" clause at the end of each description, so truncation drops the routing signal first, and that signal is exactly what the token buys.
 - **The guard has no platform branch**: on Windows the shell tool is `pwsh`, already in the `checkTools` default. If you disable `tool-pwsh` for a different executor, update that list or the guard silently stops matching.
+- **This package writes exactly one line of your profile config**: retracting a dangling default-preset pointer in the profile's `cordis.patch.yml`, one scalar value. While the plugin is still usable it does not touch the file — closing DSH normally never loses your default preset.
 - **`bash` can bypass the first rule**: one `bash` call that writes files and runs a command counts as verification only. That is a deliberate trade (otherwise `sed -i && npm test` would be a false positive); the cost is that an all-bash editing style is unconstrained.
+
+## Disabling and uninstalling
+
+This preset registers one preset candidate with the host. Once you pick it as the default, that choice is stored in the profile's `cordis.patch.yml` (the `selectedDefault` of the `agent-preset-registry` row). Disabling the bundle removes only the bundle listing; uninstalling removes only the directory. **Neither touches that pointer** — and a dangling pointer makes every new session throw `agent-preset/not-found` while resolving the preset. What you see is "after installing this plugin, DSH cannot start a session any more", and uninstalling does not heal it.
+
+So this package ships a guard and a command:
+
+| Situation | What to do | What happens |
+|---|---|---|
+| You want to disable it, plugin still installed | Disable it in the plugin manager | The guard retracts the pointer on disable; re-enabling restores your previous choice automatically (unless you picked another preset meanwhile) |
+| You want it gone for good | Run `npx dsh-stack uninstall` first, then uninstall in the plugin manager | Pointer retracted first, then the bundle listing, dependency and directory go — no window in between |
+| Already broken, no new sessions | `npx dsh-stack doctor`, then `npx dsh-stack doctor --fix` | Retracts the pointer, clears leftover listings and the preset marker in old session caches; restart DSH |
+| You just want to look | `npx dsh-stack status` | One block per profile: package present, bundle listed, where the pointer aims |
+
+The command finds `~/.dsh` by itself (`--home` to point elsewhere, `--profile` to handle one), is idempotent, and `--dry-run` reports without writing. It rewrites the value of that single `selectedDefault` scalar plus the bookkeeping entries that must follow — it never reflows your YAML/JSON and never touches session bodies or titles.
+
+Why not a UI button: a button only exists while the plugin is still installed, and this failure happens exactly when it is not.
 
 ## Self-checks
 
@@ -261,11 +279,13 @@ npm test
 | Command | What it checks |
 |---|---|
 | `node test/st-loop.test.mjs` | Guard behaviour, 17 assertions |
-| `node test/preset.test.mjs` | Static assembly assertions, 13 (persona present, guard config matches module defaults, disabled rows untouched, prompt variables all registered by the host) |
+| `node test/preset.test.mjs` | Static assembly assertions, 15 (persona present, guard config matches module defaults, disabled rows untouched, prompt variables all registered by the host, uninstall guard agrees with the preset id in all three places) |
+| `node test/uninstall-guard.test.mjs` | Disable/uninstall behaviour, 25 (a normal exit writes nothing, disabling retracts the pointer, re-installing restores it, a user-chosen preset is never overwritten, session caches keep everything but the preset field) |
 | `node scripts/verify-preset.mjs` | Assembly integrity: include path = package name + directory, skill root derived from baseUrl, cap fits the longest description |
 | `node scripts/verify-skills.mjs` | Skill validity: frontmatter, directory ↔ `name`, description length, no dead `/st-*` cross-references |
 | `node scripts/verify-manifest.mjs` | Manifest and shipped artifact: allowlist, `engines`, actual `npm pack` contents |
-| `node scripts/verify-host-api.mjs` | Host-private contracts: `agent/turn-stopping`, `agent.steer`, `session.snapshotEvents`, tool-name registry (SKIPs without a DSH install) |
+| `node scripts/verify-mount.mjs` | Mounting: lays the package out like a real install in a temporary profile and lets the host loader resolve both relative paths, proving the guard and the include land on the right files (9 checks, SKIPs without a DSH install) |
+| `node scripts/verify-host-api.mjs` | Host-private contracts: `agent/turn-stopping`, `agent.steer`, `session.snapshotEvents`, tool-name registry, `effect` disposer semantics, disabling a bundle never touching the pointer (9 checks; on an asar-packed desktop build it prints the extract command and SKIPs) |
 
 Before publishing, `scripts/verify-release.mjs` additionally requires a clean tree, a tag matching the version, and a CHANGELOG section for the current version.
 

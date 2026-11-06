@@ -81,6 +81,47 @@ for (const [id, label] of requiredRows) {
   }
 }
 
+// ---- 3b. 卸载守卫行：指向真实文件，且守的是本预设自己的 id ----
+//
+// 这一行是唯一会写用户 profile 的代码（收走悬空的默认预设指针）。它挂在 profile
+// 根，路径同样由包名拼成；包名或目录改名不同步，守卫会静默消失，而消失的表现是
+// 「停用/卸载之后宿主新建不了会话」—— 比装不上更难查，因为它只在离开时出错。
+const guardRow = /^\s+- id:\s*st-stack-uninstall-guard\s*$/m.test(patch)
+if (!guardRow) {
+  fail(
+    'cordis.patch.yml 缺少卸载守卫行（- id: st-stack-uninstall-guard）',
+    '没有它，停用或卸载本插件会把宿主的默认预设指针留成悬空，新建会话直接失败'
+  )
+} else {
+  const guardName = patch.match(/- id:\s*st-stack-uninstall-guard\s*\n\s+name:\s*"([^"]+)"/)
+  // insert[].name 以 patch 文件目录（包目录）为基准，所以是 ./preset/... 而不是 ./node_modules/<pkg>/preset/...
+  const expectedGuard = './preset/uninstall-guard.mjs'
+  if (!guardName) {
+    fail('卸载守卫行没有 name')
+  } else if (guardName[1] !== expectedGuard) {
+    fail(
+      `卸载守卫的模块路径与实际不符：声明 ${guardName[1]}，应为 ${expectedGuard}`,
+      'guard 行和 include 行一样由包名拼成，改名必须同步'
+    )
+  } else if (!existsSync(join(ROOT, 'preset', 'uninstall-guard.mjs'))) {
+    fail('preset/uninstall-guard.mjs 不存在，守卫行会在加载时失败')
+  }
+
+  const presetRowId = patch.match(/^\s+- id:\s*preset-([a-z0-9-]+)\s*$/m)
+  const guardPresetId = patch.match(/^\s+presetId:\s*([a-z0-9-]+)\s*$/m)
+  if (presetRowId !== null && guardPresetId !== null && presetRowId[1] !== guardPresetId[1]) {
+    fail(
+      `卸载守卫的 presetId（${guardPresetId[1]}）与预设声明行的 id（${presetRowId[1]}）不一致`,
+      '守卫会去收一个不存在的指针，真正的悬空指针留着不动'
+    )
+  }
+
+  const guardFallback = patch.match(/^\s+fallbackId:\s*([a-z0-9-]+)\s*$/m)
+  if (guardFallback === null) {
+    fail('卸载守卫没有 fallbackId', '指针回落的目标必须是宿主内置、永远存在的预设')
+  }
+}
+
 // ---- 4. 技能根必须由 baseUrl 推导，且目录存在 ----
 //
 // 写成固定相对路径的话，link: 安装（junction/symlink）会让它解析到 profile 里。

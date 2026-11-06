@@ -21,3 +21,32 @@
             name: "cordis:include"
             config:
               path: "./node_modules/dsh-stack/preset/agent.cordis.yml"
+
+    # 卸载守卫：本包唯一一条会写用户 profile 的行。
+    #
+    # 为什么需要它：宿主把「当前默认预设」记在 profile 的 `cordis.patch.yml`
+    # （`agent-preset-registry` 行的 `config.selectedDefault`），而这个值只在用户
+    # 换预设时才会被改写。停用 bundle 时宿主只删 `dsh.profile.bundles` 里的包名
+    # （dsh-plugin-manager/lib/index.js:3064-3080），指针留在原地；下一次
+    # `presets.resolve('dsh-stack')` 抛 `agent-preset/not-found`，新建会话在模型
+    # 开始第一步之前就失败。卸载（pnpm remove + 删 bundle 项）同理。
+    #
+    # 这一行**不是** agent preset 的一部分，所以它挂在 profile 根：预设只在其会话
+    # 内激活，而崩溃发生在会话被创建之前，挂在预设里等于修不到。
+    #
+    # 路径写法与上面那条不同，这不是笔误：`insert[].name` 以 **patch 文件所在目录**
+    # （也就是包目录）为基准被重写成 file URL
+    # （dsh-app-boot/lib/index.js:4718-4725 的 anchorInsertedPluginNames），
+    # 而 `cordis:include` 的 `config.path` 不被它处理，运行时才按 profile 目录解析。
+    # 把这里写成 ./node_modules/dsh-stack/preset/... 会解析成
+    # <包目录>/node_modules/dsh-stack/preset/...，多一层，加载即失败。
+    #
+    # 它做两件事，判据都是磁盘上的安装状态（包在不在、bundles 有没有、补丁有没有
+    # disabled），不是宿主当前的内存状态 —— 这样「正常退出」时三项都在，它一个
+    # 字节都不改；「停用/卸载」时宿主先写盘再 reload，它才收走指针。
+    # 详见 preset/uninstall-guard.mjs 与 preset/lifecycle.mjs。
+    - id: st-stack-uninstall-guard
+      name: "./preset/uninstall-guard.mjs"
+      config:
+        presetId: dsh-stack
+        fallbackId: standard
