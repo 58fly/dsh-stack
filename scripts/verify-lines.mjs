@@ -13,11 +13,19 @@
  */
 import { createRequire } from 'node:module'
 import { existsSync, readFileSync } from 'node:fs'
-import { dirname, join, resolve as resolvePath } from 'node:path'
+import { dirname, isAbsolute, join, resolve as resolvePath } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const PRESET = resolvePath(ROOT, process.argv[2] && !process.argv[2].startsWith('-') ? process.argv[2] : 'preset/agent.cordis.yml')
+// 参数可以相对 cwd（人手动传）也可以相对包根（默认值）；绝对路径直接用
+const argPath = process.argv[2] && !process.argv[2].startsWith('-') ? process.argv[2] : null
+const PRESET = argPath === null
+  ? join(ROOT, 'preset/agent.cordis.yml')
+  : isAbsolute(argPath)
+    ? argPath
+    : existsSync(resolvePath(argPath))
+      ? resolvePath(argPath)
+      : resolvePath(ROOT, argPath)
 const PRESET_DIR = dirname(PRESET)
 const SNAPSHOT_PATH = join(ROOT, 'test/host-surface.json')
 
