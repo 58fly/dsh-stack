@@ -1,4 +1,4 @@
-# 临时：一次性把本仓 NPM_TOKEN 以 RSA-OAEP 公钥加密后写成 artifact，供本机取回后
+# 临时：一次性把本仓 NPM_TOKEN 用 RSA-OAEP 公钥加密后写成 artifact，供本机取回后
 # 设置到 58fly/dsh-ponytail-58fly。私钥只在本机 /tmp/pt-bridge-key.pem，取回后本文件与本次 run 一并删除。
 # 明文与密文都不打印到日志；GitHub 也会 mask secret 值。
 name: _token-bridge
@@ -30,15 +30,15 @@ jobs:
           test -n "$BRIDGE_VALUE" || { echo "secret 为空"; exit 1; }
           test -n "$BRIDGE_PUBKEY" || { echo "公钥为空"; exit 1; }
           cat > enc.mjs <<'BRIDGE_EOF'
-import crypto from 'node:crypto';
-import fs from 'node:fs';
-const pub = process.env.BRIDGE_PUBKEY;
-const value = process.env.BRIDGE_VALUE;
-const enc = crypto.publicEncrypt({ key: pub, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' }, Buffer.from(value, 'utf8'));
-fs.writeFileSync('token.enc', enc.toString('base64'));
-console.log('明文字节数', Buffer.byteLength(value, 'utf8'));
-console.log('密文字节数', enc.length);
-BRIDGE_EOF
+          import crypto from 'node:crypto';
+          import fs from 'node:fs';
+          const pub = process.env.BRIDGE_PUBKEY;
+          const value = process.env.BRIDGE_VALUE;
+          const enc = crypto.publicEncrypt({ key: pub, padding: crypto.constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' }, Buffer.from(value, 'utf8'));
+          fs.writeFileSync('token.enc', enc.toString('base64'));
+          console.log('明文字节数', Buffer.byteLength(value, 'utf8'));
+          console.log('密文字节数', enc.length);
+          BRIDGE_EOF
           node enc.mjs
       - uses: actions/upload-artifact@v4
         with:
